@@ -5,64 +5,50 @@ global CMAIN
 CMAIN:
     mov rbp, rsp; for correct debugging
     
-    ; 분기문 (if)
-    ; 특정 조건에 따라서 코드 흐름을 제어하는 것
-    ; ex) 스킬 버튼 눌렀는가? YES -> 스킬 사용
-    ; 조건 -> 흐름
+    ; 반복문 (while for)
+    ; 특정 조건을 만족할 때까지 반복해서 실행
+    ; ex) hello world를 10번 출력해야 한다면?
+    mov ecx, 10
     
-    ; CMP dst, src (dst가 기준), compare
-    ; 비교를 한 결과물은 Flag Register 저장
+LABEL_LOOP:
     
-    ; JMP [label] 시리즈, jump
-    ; JMP : 무조건 jump
-    ; JE : JumpEquals 같으면 jump
-    ; JNE : JumpNotEquals 다르면 jump
-    ; JG : JumpGreater 크면 jump
-    ; JGE : JumpGreaterEquals 크거나 같으면 jump
-    ; JL
-    ; JLE
+    PRINT_STRING msg
+    NEWLINE
+    dec ecx ; sub ecx, 1과 동일 
+    cmp ecx, 0
+    jne LABEL_LOOP
     
-    ; 두 숫자가 같으면 1, 아니면 0을 출력하는 프로그램
-    mov rax, 10
-    mov rbx, 10
+    ; 연습 문제) 1에서 100까지의 합을 구하는 프로그램 1+2+3 .... + 100 = ?
+    mov  eax, 100 ; 최종 목적지
+    xor ebx, ebx; mov ebx,0 동일. ebs : 결과물
+    xor ecx, ecx
     
-    cmp rax, rbx
+LABEL_SUM:
+    inc ecx ; add ecx, 1과 동일
+    add ebx, ecx ; ebx = ebx + ecx
+    cmp ecx, eax
+    jne LABEL_SUM
     
-    je LABEL_EQUAL
-    
-    ; je에 의해 점프를 안했다면, 같지 않다는 의미
-    mov rcx, 0
-    jmp LABEL_EQUAL_END
-    
-LABEL_EQUAL: 
-    mov rcx, 1
-LABEL_EQUAL_END:
-    PRINT_HEX 1, rcx
+    PRINT_DEC 4, ebx
     NEWLINE
     
-    ; 연습 문제 : 어떤 숫자(1~100)가 짝수면 1, 홀수면 0을 출력하는 프로그램
-    mov ax, 91
+    ; loop [라벨]
+    ; - ecx에 반복 횟수
+    ; - loop 할 때마다 ecx 1 감소 0이면 빠져나감. 아니면 라벨로 이동
     
-    ;  나누기 연산
-    ; div reg
-    ; - div bl => ax / bl (al몫 ah나머지)
+    mov ecx, 100
+    xor ebx, ebx
+LABEL_LOOP_SUM:
+    add ebx, ecx
+    loop LABEL_LOOP_SUM
     
-    mov bl, 2
-    div bl
-    cmp ah, 0
-    je L1
-    mov rcx, 0
-    jmp L2
-    
-L1:
-    mov rcx, 1
-L2: 
-    PRINT_HEX 1, rcx
+    PRINT_DEC 4, ebx
     NEWLINE
-
-
-
-
+    
+    
+    
+    
+ 
     xor rax, rax
     ret
     
@@ -76,8 +62,8 @@ L2:
     ; [변수이름] [크기] [초기값]
     ; [크기] db(1) dw(2) dd(4) dq(8)  define ~
     
-; section .data
-   
+ section .data
+   msg db 'Hello World', 0x00
     
     ; 초기화 되지 않은 데이터
     ; [변수이름] [크기] [개수]
