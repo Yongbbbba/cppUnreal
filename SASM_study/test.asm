@@ -5,70 +5,64 @@ global CMAIN
 CMAIN:
     mov rbp, rsp; for correct debugging
     
-    GET_DEC 1, al
-    GET_DEC 1, num
+    ; 쉬프트(shift) 연산, 논리(logical) 연산
+    mov eax, 0x12345678
+    PRINT_HEX 4, eax
+    NEWLINE
+    shl eax, 8
+    PRINT_HEX 4, eax
+    NEWLINE
+    shr eax, 8
+    PRINT_HEX 4, eax
+    NEWLINE
+    ; 곱셈/나눗셈에 사용 가능
+    ; 게임서버에서 objectID를 만들어줄 때
     
-    ;PRINT_DEC 1, al
-    ;NEWLINE
-    ;PRINT_DEC 1, num
+    ;논리 연산
+    ; not and or xor
     
-    ; 더하기 연산
-    ; add a,b ( a = a + b)
-    ; a는 레지스터 or 메모리
-    ; b는 레지스터 or 메모리 or 상수
-    ; 단, a,b 모두 메모리여서는 안된다
+    ; 조건A : 잘생겼다
+    ; 조건B : 키가 크다 
     
-    ; 빼기 연산
-    ; sub a,b ( a = a - b)
-    ; 더하기와 동일
+    ; not A : 잘 생겼다의 반대
+    ; A and B : 잘생겼고 키도 크고
+    ; A or B : 잘생겼거나 키가 크거나 
+    ; A xor B : 잘생기고 작거나 or 못생기고 크거나 = 1 -> 둘다 1이거나 둘다 0이면 0, 아니면 1
     
-    ; 곱하기 연산
-    ; 곱하기 연산은 더하기 빼기보다 훨씬 복잡한 연산임
-    ; 곱하기 연산에 사용되는 레지스터가 따로 있음
-    ; mul reg
-    ; - mul bl => al * bl
-    ; -- 연산 결과를 ax에 저장
-    ; - mul bx => ax * bx
-    ; -- 연산 결과는 dx(상위 16비트) ax(하위 16비트)에 저장
-    ; -- mul ebx => eax * ebx
+    mov al, 0b10010101
+    mov bl, 0b01111100
     
-    ; ex ) 5 * 8은?
-    mov ax, 0
-    mov al, 5
-    mov bl, 8
-    mul bl
-    PRINT_DEC 2, ax
+    ; 0b0001 0100 = 0x14
+    and al, bl ; al = al and bl
+    PRINT_HEX 1, al
     NEWLINE
     
-    ; 나누기 연산
-    ; div reg
-    ; - div bl = > ax / bl
-    ; -- 연산 결과는 al(몫) ah(나머지)
-    
-    ; ex) 100 /3 은? 
-    mov ax, 100
-    mov bl, 3
-    div bl
-    
-    PRINT_DEC 1, al
-    NEWLINE
-    mov al, ah ; ah는 PRINT_DEC로 출력을 못해서 al로 옮겨서 출력 
-    PRINT_DEC 1, al
+    ; 0b1110 1011 = 0xeb
+    not al
+    PRINT_HEX 1, al
     NEWLINE
     
-    add al, 1; ; 레지스터 + 상수
-    PRINT_DEC 1, al 
+    ; 응용 사례 : bitflag(특정 비트를 검사하는 방법)
+    mov al, 0b10010101
+    mov bl, 0b01111100
     
-    add al, [num] ; 레지스터 + 메모리, 괄호 안하면 메모리 주소임
-    PRINT_DEC 1, al
     NEWLINE
-    
-    mov bl,3 
-    add al, bl ; 레지스터 + 레지스터
-    PRINT_DEC 1, al
+    PRINT_HEX 1, al
     NEWLINE
+    xor al, bl
+    PRINT_HEX 1, al
+    NEWLINE
+    xor al, bl
+    PRINT_HEX 1, al
+    NEWLINE
+    ; 동일한 값으로 xor 두 번하면 자기 자신으로 되돌아오는 특성이 있다.
+    ; 암호학에서 유용하다! (대칭키 방식)
     
-    add [num], byte 1
+    ; mov al, 0
+    xor al, al
+    PRINT_HEX 1, al ; 무조건 0이 나옴
+    
+    
     
     xor rax, rax
     ret
