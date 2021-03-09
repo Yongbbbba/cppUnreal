@@ -5,65 +5,64 @@ global CMAIN
 CMAIN:
     mov rbp, rsp; for correct debugging
     
-    ; 쉬프트(shift) 연산, 논리(logical) 연산
-    mov eax, 0x12345678
-    PRINT_HEX 4, eax
-    NEWLINE
-    shl eax, 8
-    PRINT_HEX 4, eax
-    NEWLINE
-    shr eax, 8
-    PRINT_HEX 4, eax
-    NEWLINE
-    ; 곱셈/나눗셈에 사용 가능
-    ; 게임서버에서 objectID를 만들어줄 때
+    ; 분기문 (if)
+    ; 특정 조건에 따라서 코드 흐름을 제어하는 것
+    ; ex) 스킬 버튼 눌렀는가? YES -> 스킬 사용
+    ; 조건 -> 흐름
     
-    ;논리 연산
-    ; not and or xor
+    ; CMP dst, src (dst가 기준), compare
+    ; 비교를 한 결과물은 Flag Register 저장
     
-    ; 조건A : 잘생겼다
-    ; 조건B : 키가 크다 
+    ; JMP [label] 시리즈, jump
+    ; JMP : 무조건 jump
+    ; JE : JumpEquals 같으면 jump
+    ; JNE : JumpNotEquals 다르면 jump
+    ; JG : JumpGreater 크면 jump
+    ; JGE : JumpGreaterEquals 크거나 같으면 jump
+    ; JL
+    ; JLE
     
-    ; not A : 잘 생겼다의 반대
-    ; A and B : 잘생겼고 키도 크고
-    ; A or B : 잘생겼거나 키가 크거나 
-    ; A xor B : 잘생기고 작거나 or 못생기고 크거나 = 1 -> 둘다 1이거나 둘다 0이면 0, 아니면 1
+    ; 두 숫자가 같으면 1, 아니면 0을 출력하는 프로그램
+    mov rax, 10
+    mov rbx, 10
     
-    mov al, 0b10010101
-    mov bl, 0b01111100
+    cmp rax, rbx
     
-    ; 0b0001 0100 = 0x14
-    and al, bl ; al = al and bl
-    PRINT_HEX 1, al
-    NEWLINE
+    je LABEL_EQUAL
     
-    ; 0b1110 1011 = 0xeb
-    not al
-    PRINT_HEX 1, al
+    ; je에 의해 점프를 안했다면, 같지 않다는 의미
+    mov rcx, 0
+    jmp LABEL_EQUAL_END
+    
+LABEL_EQUAL: 
+    mov rcx, 1
+LABEL_EQUAL_END:
+    PRINT_HEX 1, rcx
     NEWLINE
     
-    ; 응용 사례 : bitflag(특정 비트를 검사하는 방법)
-    mov al, 0b10010101
-    mov bl, 0b01111100
+    ; 연습 문제 : 어떤 숫자(1~100)가 짝수면 1, 홀수면 0을 출력하는 프로그램
+    mov ax, 91
     
+    ;  나누기 연산
+    ; div reg
+    ; - div bl => ax / bl (al몫 ah나머지)
+    
+    mov bl, 2
+    div bl
+    cmp ah, 0
+    je L1
+    mov rcx, 0
+    jmp L2
+    
+L1:
+    mov rcx, 1
+L2: 
+    PRINT_HEX 1, rcx
     NEWLINE
-    PRINT_HEX 1, al
-    NEWLINE
-    xor al, bl
-    PRINT_HEX 1, al
-    NEWLINE
-    xor al, bl
-    PRINT_HEX 1, al
-    NEWLINE
-    ; 동일한 값으로 xor 두 번하면 자기 자신으로 되돌아오는 특성이 있다.
-    ; 암호학에서 유용하다! (대칭키 방식)
-    
-    ; mov al, 0
-    xor al, al
-    PRINT_HEX 1, al ; 무조건 0이 나옴
-    
-    
-    
+
+
+
+
     xor rax, rax
     ret
     
