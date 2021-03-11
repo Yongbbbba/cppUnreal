@@ -2,9 +2,18 @@
 
 using namespace std;
 
-// 오늘의 주제 : 비트 연산
+// 오늘의 주제 : 데이터 연산
 
 unsigned char flag; // 부호를 없애야 >>를 하더라도 부호비트가 딸려오지 않음
+
+// 한 번 정해지면 절대 바뀌지 않을 값들 -> 상수
+// constant의 약자인 const를 붙임 (변수를 상수화 한다고 함)
+// const를 붙였으면 초기값을 반드시 지정해야 함
+
+int AIR = 0;
+int STUN = 1;
+int POLYMORPH = 2;
+int INVINCIBLE = 3;
 
 int main()
 {
@@ -49,17 +58,18 @@ int main()
 	// 0b0000 [무적][변이][스턴][공중부양]
 
 	// 무적 상태로 만든다
-	flag = (1 << 3);
+	flag = (1 << INVINCIBLE);
 
 	// 변이 상태를 추가한다 (무적 + 변이)
-	flag |= (1 << 2);
+	flag |= (1 << STUN);
 
 	// 무적인지 확인하고 싶다? (다른 상태는 관심 없음)
 	// bitmask
-	bool invincible = (flag & (1 << 3)) != 0;
+	bool invincible = (flag & (1 << INVINCIBLE)) != 0;
 	cout << invincible << endl;
 	// 무적이거나 스턴 상태인지 확인하고 싶다면?
-	bool stunOrInvincible = ((flag & (1 << 3)) != 0) || ((flag & (1 << 1)) != 0); // ((flag & 0b1010) != 0); bool mask = (1 << 3) | (1 << 1);
+	unsigned char mask = (1 << INVINCIBLE) | (1 << STUN);
+	bool stunOrInvincible = ((flag & mask) != 0); // ((flag & 0b1010) != 0); bool mask = (1 << 3) | (1 << 1);
 	cout << stunOrInvincible << endl;
 
 #pragma endregion
