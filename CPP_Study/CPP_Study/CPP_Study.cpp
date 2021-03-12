@@ -1,37 +1,84 @@
 ﻿#include <iostream>
+#include <string>
 
 using namespace std;
 
-// 오늘의 주제 : 유의사항(팁)
-
-// 1) 변수의 유효범위
-// int hp = 10;
-
-// 스택
-// { } 중괄호의 범위가 생존 범위
-// 같은 이름 두 번 사용할 때 범위
-
-// 2) 연산 우선순위 : 헷갈림 방지와 가독성을 위해 괄호 사용을 권장
-
-// 3) 타입 변환
-// - int -> short 등으로 변환할 때 데이터가 의도치 않은 데이터로 바뀔 가능성이 존재한다
-
-// 4) 사칙 연산 관련
-// 곱셈
-// - 오버 플로우 조심.  int * int 일 때 int가 표현할 수 있는 범위를 넘어서면 오버플로우가 난다
-// 나눗셈
-// - 0으로 나누기 조심
-// - 실수 관련
-// (float)(123 / 1000) 하면 0.123이 나올 것 같지만 0이 나옴.
+const int S = 1; // 가위
+const int R = 2; // 바위
+const int P = 3; // 보
 
 
+
+// 가위(1) 바위(2) 보 게임 만들기
 int main()
 {
-	int a = 1000;
-	int b = 123;
-	float ratio = b / a;
-	cout << ratio << endl;
-	cout << b / (float)a << endl;
 
+	// rand(); // 0 ~ 32767 출력
+	// int value = 1 + rand() % 3; // 0, 1, 2 세 가지 랜덤으로 출력하는 꼼수
+	int my_value;
+	int your_value;
+	string my;
+	string your;
+	
+	cout << "가위(1) 바위(2) 보(3) 게임" << endl;
+	cout << endl;
+
+	while (true)
+	{
+		srand(time(0)); // 시드값 설정해주는 것
+
+		cout << "가위! 바위! 보! : ";
+		cin >> my_value;
+		cout << endl;
+
+		if (my_value == R) my = "바위";
+		else if (my_value == S) my = "가위";
+		else my = "보";
+
+		your_value = 1 + rand() % 3;
+
+		if (your_value == R) your = "바위";
+		else if (your_value == S) your = "가위";
+		else your = "보";
+		
+
+		if (my_value == R || my_value == S || my_value == P)
+		{
+			cout << my << "(나) vs " << your << "(상대방) " << "=> ";
+			// 내가 가위 냈을 때
+			if (my_value == S)
+			{
+				if (your_value == S) cout << "비겼습니다" << endl;
+
+				else if (your_value == R) cout << "졌습니다" << endl;
+				else cout << "이겼습니다" << endl;
+			}
+
+			// 내가 바위 냈을 때
+			else if (my_value == R)
+			{
+				if (your_value == S) cout << "이겼습니다" << endl;
+
+				else if (your_value == R) cout << "비겼습니다" << endl;
+				else cout << "졌습니다" << endl;
+			}
+
+			// 내가 보냈을 때
+			else
+			{
+				if (your_value == S) cout << "졌습니다" << endl;
+
+				else if (your_value == R) cout << "이겼습니다" << endl;
+				else cout << "비겼습니다" << endl;
+			}
+
+		}
+
+		else
+		{
+			cout << "게임이 종료되었습니다." << endl;
+			return 0;
+		}
+	}
 }
 
