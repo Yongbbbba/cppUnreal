@@ -3,34 +3,41 @@
 
 using namespace std;
 
-// 오늘의 주제 : 호출 스택
-void Func1();
-void Func2(int hp, int mp);
-void Func3(float); // 이런 식으로 함수원형을 선언할 때는 매개변수 이름을 적어두지 않을 수는 있지만, 프로그램 규모가 커진다면 파라미터명을 넣는 것을 권장
+// 오늘의 주제 : 함수 마무리
+// 오버로딩 (중복 정의 : 함수 이름의 재사용)
+// - 매개변수 갯수가 다르거나 
+// - 매개변수 타입이 다르거나 (순서가 다른걸 포함)
 
-void Func1()
+
+int Add(int a, int b)
 {
-	cout << "Func1" << endl;
-
-	Func2(1, 2);
+	return a + b;
+}
+float Add(float a, float b)
+{
+	return a + b;
 }
 
-void Func2(int hp, int mp)
+// 기본 인자값 
+void SetPlayerInfo(int hp, int mp, int attack, int guildId=0)
 {
-	cout << "Func2" << endl;
-
-	Func3(0.1f);
+	return;
 }
 
-void Func3(float a)
+// 스택 오버플로우
+int factorial(int n)
 {
-	cout << "Func3" << endl;
-}
+	if (n <= 1)
+		return 1;
 
+	return n * factorial(n - 1);
+}
 int main()
 {
-	cout << "main()" << endl;
-	Func1();
+	cout << factorial(10);
+	// cout << factorial(100000); // 스택 오버플로우
+
+	return 0;
 
 }
 
