@@ -3,41 +3,155 @@
 
 using namespace std;
 
-// 오늘의 주제 : 포인터
-\
+// 오늘의 주제 : TextRPG #1
+
+enum PlayerType
+{
+	PT_Knight = 1,
+	PT_Archer = 2,
+	PT_Mage = 3,
+};
+
+enum MonsterType
+{
+	MT_Slime = 1,
+	MT_Orc = 2,
+	MT_Skeleton = 3,
+};
+
+
+int playerType;
+int hp;
+int attack;
+int defence;
+
+int monsterType;
+int monsterHp;
+int monsterAttack;
+int monsterDefence;
+
+void EnterLobby();
+void SelectPlayer();
+void EnterField();
+void CreateRandomMonster();
+
 int main()
 {
-	// 지금까지 사용한 방식
-	// number라는 이름의 4바이트 정수타입의 바구니를 만든다
-	// number라는 변수 스택 메모리에 할당
-	// number = 1라 함은, number 바구니에 1이라는 숫자를 넣으라는 의미
-	// number는 비유하자면 메모리에 이름을 붙인 것(찰떡같이 알아들어서)
-	// 나쁘지 않고 편리한데, textRPG 원본 수정
+	// 랜덤 시드 설정
+	srand(time(0));
 
-	int number = 1;
-
-	// TYPE* 변수이름;
-	// 일단 2가지 요소
-	// - TYPE
-	// - *
-	int* ptr = &number;
-	// 바구니는 바구니인데...
-	// [주소를 저장하는 바구니다!]
-	// 변수를 선언할 때 * 등장했다 -> 포인터 = 주소
-	// 참고) 포인터라는 바구니는 8바이트(64비트) 고정 크기, type에 따라 달라지는게 아님.
-	// - 앞에 나온 타입은 바구니에 담을 변수의 타입이다
-
-	// 근데 남의 주소를 갖고 뭘 하라는거지?
-	// 추가 문법 : [주소를 저장하는 바구니]가ㅏ 가리키는 주소로 가서 무엇인가를 해라!
-	// *변수이름 = 값;
-
-	int value1 = *ptr;
-	*ptr = 2;
-	cout << *ptr << endl;
-	cout << value1 << endl;
-
-
+	EnterLobby();
+	
 	return 0;
 }
 
+void EnterLobby()
+{
+	while (true)
+	{
+		cout << "-------------------" << endl;
+		cout << "로비에 입장했습니다!" << endl;
+		cout << "-------------------" << endl;
 
+		// 플레이어 직업 선택
+		SelectPlayer();
+
+		cout << "---------------------------" << endl;
+		cout << "(1) 필드 입장 (2) 게임 종료" << endl;
+		cout << "---------------------------" << endl;
+
+		int input;
+		cin >> input;
+
+		if (input == 1)
+		{
+			EnterField();
+		}
+		else
+		{
+			return;
+		}
+
+	}
+}
+
+void SelectPlayer()
+{
+	while (true)
+	{
+
+		cout << "-------------------" << endl;
+		cout << "직업을 골라주세요!" << endl;
+		cout << "(1) 기사 (2) 궁수 (3) 법사" << endl;
+		cout << "> ";
+
+		cin >> playerType;
+
+		if (playerType == PT_Knight)
+		{
+			cout << "기사 생성중...!" << endl;
+			hp = 150;
+			attack = 10;
+			defence = 5;
+			break;
+		}
+		else if (playerType == PT_Archer)
+		{
+			cout << "궁수 생성중...!" << endl;
+			hp = 100;
+			attack = 15;
+			defence = 3;
+			break;
+		}
+		else if (playerType == PT_Mage)
+		{
+			cout << "법사 생성중...!" << endl;
+			hp = 80;
+			attack = 25;
+			defence = 0;
+			break;
+		}
+	}
+}
+
+void EnterField()
+{
+	while (true)
+	{
+		cout << "-------------------" << endl;
+		cout << "필드에 입장했습니다!" << endl;
+		cout << "-------------------" << endl;
+
+		cout << "[PLAYER] HP : " << hp << " / ATT : " << attack << " / DEF : " << defence << endl;
+
+		CreateRandomMonster();
+	}
+}
+
+void CreateRandomMonster()
+{
+	// 1~3
+	monsterType = 1 + (rand() % 3); // 1 2 3
+
+	switch (monsterType)
+	{
+	case MT_Slime:
+		cout << "슬라임 생성중...! (HP:15 / ATT:5 / DEF:0)" << endl;
+		monsterHp = 15;
+		monsterAttack = 5;
+		monsterDefence = 0;
+		break;
+	case MT_Orc:
+		cout << "오크 생성중...! (HP:40 / ATT:10 / DEF:3)" << endl;
+		monsterHp = 40;
+		monsterAttack = 10;
+		monsterDefence = 3;
+		break;
+	case MT_Skeleton:
+		cout << "스켈레톤 생성중...! (HP:80 / ATT:15 / DEF:5)" << endl;
+		monsterHp = 80;
+		monsterAttack = 15;
+		monsterDefence = 5;
+		break;	
+	}
+}
