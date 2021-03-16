@@ -2,112 +2,117 @@
 
 using namespace std;
 
-// 오늘의 주제 : 참조
+// 오늘의 주제 : 포인터 실습
 
-struct StatInfo
+struct StatInfo // 12bytes
 {
-	int hp;
-	int attack;
-	int defence;
+	int hp;   // +0
+	int attack;  // +4
+	int defence; // +8
 };
 
-// [매개변수][RET][지역변수(info)][매개변수(&info)][RET][지역변수]
-void CreateMonster(StatInfo* info)
-{
-	info->hp = 100;
-	info->attack = 8;
-	info->defence = 5;
-}
+void EnterLobby();
+StatInfo CreatePlayer();
+void CreateMonster(StatInfo* info);
+// 플레이어 승리 시 true, 아니면 false
+bool StartBattle(StatInfo* player, StatInfo* monster);
 
-// [매개변수][RET][지역변수(info)][매개변수(info(100, 8, 5))][RET][지역변수]
-// 함수 return 되면
-// [매개변수][RET][지역변수(info)]
-void CreateMonster(StatInfo info)
-{
-	info.hp = 100;
-	info.attack = 8;
-	info.defence = 5;
-}
-
-// 값을 수정하지 않는다면, 양쪽 다 일단 문제 없음
-
-// 1) 값 전달 방식
-void PrintInfoByCopy(StatInfo info)
-{
-	cout << "--------------------" << endl;
-	cout << "HP: " << info.hp << endl;
-	cout << "ATT: " << info.attack << endl;
-	cout << "DEF: " << info.defence << endl;
-	cout << "--------------------" << endl;
-	
-}
-
-// 2) 주소 전달 방식
-void PrintInfoByPtr(StatInfo* info)
-{
-	cout << "--------------------" << endl;
-	cout << "HP: " << info->hp << endl;
-	cout << "ATT: " << info->attack << endl;
-	cout << "DEF: " << info->defence << endl;
-	cout << "--------------------" << endl;
-
-}
-
-// StatInfo 구조체가 1000바이트짜리 대형 구조체라면?
-// - (값 전달) StatInfo로 넘기면 1000 바이트가 복사되는 일이 발생
-// - (주소 전달) StatInfo*는 8바이트(64비트일 경우)
-// - (참조 전달) StatInfo&는 8바이트
-
-// 3) 참조 전달 방식
-// 값 전달처럼 편리하게 사용하고!
-// 주소 전달처럼 주소값을 이용해 진퉁을 건드리는!
-// 양쪽의 장점을 합한 일석이조의 방식
-
-void PrintInfoByRef(StatInfo& info)
-{
-	cout << "--------------------" << endl;
-	cout << "HP: " << info.hp << endl;
-	cout << "ATT: " << info.attack << endl;
-	cout << "DEF: " << info.defence << endl;
-	cout << "--------------------" << endl;
-}
 
 int main()
 {
-
-	// 4바이트 정수형 바구니를 사용할꺼야
-	// 앞으로 그 바구니 이름을 number라고 할게
-	// 그러니까 number에서 뭘 꺼내거나, number에 뭘  넣는다고 하면
-	// 찰떡 같이 알아듣고 해당 주소(data, stack, heap)에 1을 넣어주면 된다!
-	int number = 1;
-	
-	// * 주소를 담는 바구니
-	// int 그 바구니를 따라가면 int 데이터(바구니)가 있음
-	int* pointer = &number;
-	// pointer 바구니에 있는 주소를 타고 이동해서, 그 멀리 있는 바구니에 2를 넣는다
-	*pointer = 2;
-
-	// 로우레벨(어셈블리) 관점에서 실제 작동 방식은 int*와 똑같음
-	// 실제로 실행해보면 포인터랑 100% 똑같다.
-	int& reference = number;
-
-	// C++ 관점에서는 number라는 바구니에 또 다른 이름을 부여한 것.
-	// number라는 바구니에 reference라는 다른 이름을 지어줄게 ~~ 
-	// 앞으로 reference 바구니에다가 뭘 꺼내거나 넣으면,
-	// 실제 number 바구니(진퉁에다가) 그 값을 꺼내거나 넣으면 됨!
-	reference = 3;
-
-	// 그런데 귀찮게 또 다른 이름을 짓는 이유는?
-	// 그냥 number = 3이라고 해도 똑같은데...
-	// 참조 전달 때문!
-
-	
-	StatInfo info;
-	CreateMonster(&info);
-	PrintInfoByCopy(info);
-	PrintInfoByPtr(&info);
-	PrintInfoByRef(info); // 주소값을 명시적으로 넘겨줄 필요가 없음
+	EnterLobby();
 	
 	return 0;
 }
+
+void EnterLobby()
+{
+	cout << "로비에 입장하였습니다." << endl;
+	
+	// 어셈블리 코드 까보면 temp 변수를 만들고 거기에 값을 복사해서 createPlayer에 매개변수로 넘겨준다.(정확히는 temp의 주소를)
+	// 반면에 monster에서는 monster의 주소랄 매개변수로 넘겨주기 때문에 복사작업이 일어나지 않아서 메모리 효율적이다.
+	StatInfo player;
+	player.hp = 0xbbbbbbbb;
+	player.attack = 0xbbbbbbbb;
+	player.defence = 0xbbbbbbbb;
+
+	player = CreatePlayer();
+
+	StatInfo monster;
+	monster.hp = 0xbbbbbbbb;
+	monster.defence = 0xbbbbbbbb;
+	monster.attack = 0xbbbbbbbb;
+	
+	CreateMonster(&monster);
+
+	bool victory = StartBattle(&player, &monster);
+
+	if (victory)
+		cout << "승리!" << endl;
+	else
+		cout << "패배!" << endl;
+	// 번외편1)
+	// 구조체끼리 복사할 때는 무슨 일이 일어날까?
+	//player = monster;
+	// 위와 동일
+	/*player.hp = monster.hp;
+	player.attack = monster.attack;
+	player.defence = monster.defence;*/
+
+}
+
+StatInfo CreatePlayer()
+{
+	StatInfo ret;
+
+	cout << "플레이어 생성" << endl;
+
+	ret.hp = 100; 
+	ret.attack = 10;
+	ret.defence = 2;
+
+	return ret;
+}
+
+void CreateMonster(StatInfo* info)
+{
+	cout << "몬스터 생성" << endl;
+
+	info->hp = 40;
+	info->attack = 8;
+	info->defence = 1;
+}
+
+bool StartBattle(StatInfo* player, StatInfo* monster)
+{
+	while (true)
+	{
+		int damage = player->attack - monster->defence;
+		if (damage < 0)
+			damage = 0;
+
+		monster->hp -= damage;
+		if (monster->hp < 0)
+			monster->hp = 0;
+
+		cout << "몬스터 HP: " << monster->hp << endl;
+
+		if (monster->hp == 0)
+			return true;
+
+		damage = monster->attack - player->defence;
+		if (damage < 0)
+			damage = 0;
+
+		cout << "플레이어 HP : " << player->hp << endl;
+
+		player->hp -= damage;
+		if (player->hp < 0)
+			player->hp = 0;
+
+		if (player->hp == 0)
+			return false;
+	}
+}
+
 
