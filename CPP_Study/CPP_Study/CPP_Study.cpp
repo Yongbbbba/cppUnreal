@@ -2,48 +2,44 @@
 
 using namespace std;
 
-// 오늘의 주제 : 포인터 vs 배열
+// 오늘의 주제 : 다중 포인터
 
-
-void Test(int a)
+void SetNumber(int* a)
 {
-	a++;
+	*a = 1;
 }
 
-// 배열은 함수 인자로 넘기면, 컴파일러가 알아서 포인터로 치환한다 (char[] -> char*)
-// 즉 배열의 내용 전체를 넘긴게 아니라, 시작 주소(포인터)만 넘긴거다.
-void Test(char a[])
+void SetMessage(const char* a)
 {
-	a[0] = 'x';
+	a = "Bye";  // Bye의 주소를 a에 넣어주라는 뜻, 스택프레임이 종료가 되면 유효하지 않게 됨
 }
 
 int main()
 {
-	// 문자열 = 문자 배열
-	const char msg[] = { 'H', 'e', 'l', 'l', 'o', '\0' };
-
-	// .rdata 영역 주소[H][e][l][l][o][][W][o][r][l][d][\0]
-	// test1[ 주소 ] << 8바이트 
-	const char* test1 = "Hello World";
-	// .rdata 영역 주소[H][e][l][l][o][][W][o][r][l][d][\0]
-	// 	   [H][e][l][l][o][][W][o][r][l][d][\0]
-	// test2 = 주소
-	char test2[] = "Hello World";
-	
-
-	// 포인터는 [주소를 담는 바구니]
-	// 배열은 [닭장] 즉, 그 자체로 같은 데이터끼리 붙어있는 '바구니 모음'
-	// - 다만 [배열 이름]은 '바구니 모음'의 [시작 주소], 마치 포인터처럼 사용됨
-	
-	// 배열을 함수의 인자로 넘기게 되면?
-
 	int a = 0;
-	// [매개변수][RET][지역변수(a=0)][매개변수(a=0)][RET][지역변수]
-	Test(a);
-	cout << a << endl;
-	
-	Test(test2);
-	cout << test2 << endl;
+	SetNumber(&a);
+	//cout << a << endl;
+
+	// .rdata  Hello주소[H][e][l][l][o][\0]
+	// msg[ Hello주소 ] << 8바이트
+	const char* msg = "Hello";
+
+	// [매개변수][RET][지역변수][매개변수][RET][지역변수]
+	SetMessage(msg);
+	cout << msg << endl;  // bye가 아니라 여전히 hello로 출력됨
+
+	// 주소2[  ] << 1바이트 짜리 바구니(const char)
+	// 주소1[ 주소2 ]  << 8바이트
+	// pp[ 주소1 ] << 8바이트
+
+	// .rdata   Hello주소[H][e][l][l][o][\0]
+	// msg[  Hello 주소 ]  << 8바이트
+	// pp[ &msg ] << 8바이트
+	const char** pp = &msg;
+	*pp = "Bye";
+	cout << msg << endl; // Bye 출력
+
+
 
 	return 0;
 }
