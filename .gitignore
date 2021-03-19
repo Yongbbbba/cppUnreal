@@ -466,3 +466,6 @@ MigrationBackup/
 .ionide/
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,windows,macos,linux,c++,assembler
+
+# lecture data
+lecture_data/
