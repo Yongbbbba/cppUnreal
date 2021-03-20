@@ -41,6 +41,8 @@ void StrCpy(char* dest, char* src)
 // 문제3) 문자열 덧붙이는 함수
 char* StrCat(char* dest, char* src)
 {
+	char* ret = dest;
+
 	while (*dest) 
 		dest++;
 	while (*src)
@@ -50,7 +52,7 @@ char* StrCat(char* dest, char* src)
 		src++;
 	}
 	*dest = '\0';
-	return dest;
+	return ret;
 }
 
 #pragma warning(disable:4996)
