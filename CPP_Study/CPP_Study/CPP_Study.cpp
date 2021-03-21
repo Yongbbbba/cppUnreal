@@ -1,78 +1,163 @@
 ﻿#include <iostream>
+#include <iomanip>
 
 using namespace std;
 
-// 오늘의 주제 : 연습 문제
+// 오늘의 주제 : 연습 문제 : 달팽이
 
-// 문제1) 문자열 길이를 출력하는 함수
-int StrLen(const char* str)
+const int MAX = 100;
+int board[MAX][MAX] = {};
+int N;
+
+void PrintBoard()
 {
-	// str이라는 문자열의 길이를 반환
-	int length = 1;
-	for (auto i = 0; i < sizeof(str); i++)
+	for (int y = 0; y < N; y++)
 	{
-		if (str[i] == '\0') break;
-		length++;
+		for (int x = 0; x < N; x++)
+		{
+			cout << setfill('0')  << setw(2) <<  board[y][x] << " ";
+		}
+		cout << endl;
 	}
-
-	return length;
 }
 
-// 문제2) 문자열 복사 함수
-void StrCpy(char* dest, char* src)
+void MySetBoard(int board[MAX][MAX], int N)
 {
-	//int i = 0;
-	//while (src[i] != '\0')
-	//{
-	//	dest[i] = src[i];
-	//	i++;
-	//}
-	//dest[i] = '\0';
+	int r = 0;
+	int c = -1;
+	int num = 1;
+	int endV = N * N;
 
-	while (*src)
+	while (num <= endV)
 	{
-		*dest = *src;
-		dest++;
-		src++;
+
+		for (int i = 0; i < N; i++)
+		{
+			c++;
+			board[r][c] = num;
+			num++;
+		}
+		N--;
+		for (int i = 0; i < N; i++)
+		{
+			r++;
+			board[r][c] = num;
+			num++;
+		}
+		for (int i = 0; i < N; i++)
+		{
+			c--;
+			board[r][c] = num;
+			num++;
+		}
+		N--;
+		for (int i = 0; i < N; i++)
+		{
+			r--;
+			board[r][c] = num;
+			num++;
+		}
 	}
-	*dest = '\0';
 }
 
-// 문제3) 문자열 덧붙이는 함수
-char* StrCat(char* dest, char* src)
+enum DIR
 {
-	char* ret = dest;
+	RIGHT,
+	DOWN,
+	LEFT,
+	UP,
+};
 
-	while (*dest) 
-		dest++;
-	while (*src)
-	{
-		*dest = *src;
-		dest++;
-		src++;
-	}
-	*dest = '\0';
-	return ret;
+bool CanGo(int y, int x)
+{
+	if (y < 0 || y >= N)
+		return false;
+	if (x < 0 || x >= N)
+		return false;
+	if (board[y][x] != 0)
+		return false;
+	return true;
 }
 
-#pragma warning(disable:4996)
+void SetBoard()
+{
+	int dir = RIGHT;
+
+	int num = 1;
+	int y = 0;
+	int x = 0;
+
+	int dy[] = { 0,1,0,-1 };
+	int dx[] = { 1,0,-1,0 };
+
+	while (true)
+	{
+		board[y][x] = num;
+
+		if (num == N * N)
+			break;
+
+		int nextY = y + dy[dir];
+		int nextX = x + dx[dir];
+
+		//switch (dir)
+		//{
+		//case RIGHT:
+		//	nextY = y;
+		//	nextX = x+1;
+		//	break;
+		//case DOWN:
+		//	nextY = y+1;
+		//	nextX = x;
+		//	break;
+		//case LEFT:
+		//	nextY = y;
+		//	nextX = x - 1;
+		//	break;
+		//case UP:
+		//	nextY = y-1;
+		//	nextX = x;
+		//	break;
+		//}
+
+		// 갈 수 있는 곳이면 
+		if (CanGo(nextY, nextX))
+		{
+			y = nextY;
+			x = nextX;
+			num++;
+		}
+
+		// 갈 수 없으면 방향 바꾸기
+		else
+		{
+			dir = (dir + 1) % 4;
+			/*switch (dir)
+			{
+			case RIGHT:
+				dir = DOWN;
+				break;
+			case DOWN:
+				dir = LEFT;
+				break;
+			case LEFT:
+				dir = UP;
+				break;
+			case UP:
+				dir = RIGHT;
+				break;
+			}*/
+		}
+	}
+}
 
 int main()
 {
-	const int BUF_SIZE = 100;
+	cin >> N;
 
-	char a[BUF_SIZE] = "Hello";
-	char b[BUF_SIZE] = "World";
-
-	//cout << StrLen(a) << endl;
-	//cout << strlen(a) << endl;
-
-	//strcpy(b, a);
-	//StrCpy(b, a);
-
-	StrCat(a, b);
-	cout << a << endl;
-	cout << b << endl;
+	//MySetBoard(board, N);
+	SetBoard();
+	PrintBoard();
 
 	return 0;
 }
