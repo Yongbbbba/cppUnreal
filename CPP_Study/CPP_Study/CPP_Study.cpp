@@ -1,6 +1,6 @@
-﻿//#include <iostream>
+﻿#include <iostream>
 #include "Test1.h"
-//using namespace std;
+using namespace std;
 
 // 오늘의 주제 : 파일 분할 관리
 
