@@ -20,6 +20,18 @@ using namespace std;
 // 그럼 무엇이 더 좋은가? 그런거 없음. 심지어 둘 중 하나만 지원하는 경우도 있기 때문.
 // - 대표적으로 대입 연산자 (a = b)는 전역 연산자 version으로는 못 만든다
 
+// 복사 대입 연산자
+// - 대입 연산자가 나온 김에 [복사 대입 연산자]에 대해 알아보자
+// 용어가 좀 헷갈린다 [복사 생성자] [대입 연산자] [복사 대입 연산자] @_@
+// - 복사 대입 연산자 = 대입 연산자 중, 자기 자신의 참조 타입을 인자로 받는 것
+
+// 기타
+// - 모든 연산자를 다 오버로딩 할 수 있는 것은 아니다 (:: . .* 이런건 안됨)
+// - 모든 연산자가 다 2개 항이 있는 것은 아님. ++ --가 대표적 (단항 연산자)
+// - 증감 연산자 ++ --
+// -- 전위형 (++a) operator++()
+// -- 후위형 (a++) operator++(int)
+
 class Position
 {
 public:
@@ -46,6 +58,44 @@ public:
 		if (_x == arg._x && _y == arg._y)
 			return true;
 		return false;
+	}
+
+	Position& operator=(int arg)
+	{
+		_x = arg;
+		_y = arg;
+
+		return *this;  // this는 자기 자신을 가리키고 있는 포인터
+	}
+
+	// 복사 대입 연산자
+	// [복사 생성자] [복사 대입 연산자] 등 복사 시리즈가 특별 대우를 받는 이유는,
+	// 말 그대로 객체가 '복사'되길 원하는 특징 때문
+	// TODO ) 동적 할당 시간에 더 자세히 알아볼 것
+
+	Position& operator=(const Position& arg)
+	{
+		_x = arg._x;
+		_y = arg._y;
+
+		return *this;  
+	}
+
+	Position& operator++()
+	{
+		_x++;
+		_y++;
+
+		return *this;
+	}
+
+
+	Position operator++(int)
+	{
+		Position ret = *this;
+		_x++;
+		_y++;
+		return ret;
 	}
 	
 public:
