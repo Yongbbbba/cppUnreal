@@ -1,136 +1,113 @@
 ﻿#include <iostream>
 using namespace std;
 
-// 오늘의 주제 : 상속성
+// 오늘의 주제 : 은닉성
 
 // 객체지향 (OOP Object Oriented Programming)
 // - 상속성
 // - 은닉성
 // - 다형성
 // 
-// 
-// class는 일종의 설계도
+// 은닉성(Data Hiding) = 캡슐화(Encapsulation)
+//몰라도 되는 것은 깔끔하게 숨기겠다!
+// 숨기는 이유?
+// 1) 정말 위험하고 건드리면 안되는 경우
+// 2) 다른 경로로 접근하길 원하는 경우
 
-// 메모리
-// [ [ Player ] ]
-// [    Knight   ]
+// 자동차
+// - 핸들
+// - 페달
+// - 엔진
+// - 문
+// - 각종 전기선
 
-// 상속(Inheritance) 부모 -> 자식에게 유산을 물려주는 것
+// 일반 구매자 입장에서 사용하는 것?
+// 어떤 인터페이스로 자동차를 활용할까?
+// -핸들/페달/문
+// 몰라도 됨 (오히려 건드리면 큰일남)
+// - 엔진, 각종 전기선
 
-// 생성자(N) /소멸자(1)
+// public(공개적?)  protected (보호받는?)  private (개인의?)
+// - public : 누가한테나 공개. 실컷 사용하세요
+// - protected : 나의 자손들한테만 허락
+// - private : 나만 사용할꺼! << class Car 내부에서만 사용할 수 있다. 상속자들도 사용할 수 없음
 
-// 생성자는 탄생을 기념해서 호출되는 함수? 
-// - Knight를 생성하면 -> Player의 생성자? Knight의 생성자?
-// -> 솔로몬의 선택 ! 그냥 둘다 호출하자! 
+// 상속 접근 지정자 : 다음 세대한테 부모님의 유산을 어떻게 물려줄지?
+// 부모님한테 물려받은 유산을 꼭 나의 자손들한테도 똑같이 물려줘야 하진 않음
+// - public : 공개적 상속? 부모님의 유산 설계 그대로 ~ (public -> public, protected -> protected)
+// - protected : 보호받은 상속? 내 자손들한테만 물려줄거야 (public-> protected, protected->protected) -> 실무에서 거의 안쓰임
+// - private : 개인적인 상속? 나까지만 잘 쓰고 자손들한테는 아예 안 물려줄꺼야~ (public->private, protected->private) -> 실무에서 거의 안쓰임
 
-// RPG 게임에서 최상위 객체를 만들어주면서 시작
-// GameObject
-// - Creature
-// -- Player, Monster, Mpc, Pet
-// - Projectile
-// -- Arrow, Fireball
-// - Env
-
-// Item
-// - weapon
-// -- Swrod, Bow
-// - Armor
-// -- Helmet. Boots
-
-class Player
+class Car
 {
-public:
+public:  // (멤버) 접근 지정자
+	void MoveHandle() {}
+	void PushPedal() {}
+	void OpenDoor() {}
 
-	Player()
+	void TurnKey()
 	{
-		_hp = 0;
-		_attack = 0;
-		_defence = 0;
-		cout << "Player() 기본 생성자 호출" << endl;
+		// ... 
+		RunEngine();
 	}
 
-	Player(int hp)
+protected:
+	// 사용자가 직접 조작할 필요도 없고 일반적으로 그래서는 안되는 부분.
+	// 다른 인터페이스를 통해서 접근할 수 있는 부분
+	
+	void DisassembleCar() {} // 차를 분해한다
+	void RunEngine() {} // 엔진을 구동시킨다 
+	void Connectcircuit() {} // 전기선 연결
+
+public:
+	// 핸들
+	// 페달
+	// 엔진
+	// 각종 전기선
+	// 문
+};
+
+class SuperCar : public Car // 상속 접근 지정자
+{
+public:
+	void PushRemotecontroller()
+	{
+		RunEngine();
+	}
+};
+
+// '캡술화'
+// 연관된 데이터와 함수를 논리적으로 묶어놓은 것
+
+class Berserker
+{
+public:
+	int GetHp() { return _hp; }
+	
+	// 사양 : 체력이 50 이하로 떨어지면 버서커 모드 발동 (강해짐)
+	void SetHp(int hp)
 	{
 		_hp = hp;
-		_attack = 0;
-		_defence = 0;
-		cout << "Player(int) 기타 생성자 호출" << endl;
+		if (_hp <= 50)
+			SetBerserkerMode();
 	}
 
-	~Player()
+private:
+	void SetBerserkerMode()
 	{
-		cout << "~Player() 소멸자 호출" << endl;
+		cout << "매우 강해짐!" << endl;
 	}
 
-
-	void Move() { cout << "Player Move 호출" << endl; }
-	void Attack() { cout << "Player Attack 호출" << endl; }
-	void Die() { cout << "Player Die 호출" << endl; }
-
-public:
-	int _hp;
-	int _attack;
-	int _defence;
-};
-
-class Knight : public Player
-{
-public:
-	Knight()
-	{
-		/*
-			선(먼저)처리 영역
-			- 여기서 Player() 생성자 호출
-		*/
-
-		_stamina = 100;
-		cout << "Knight() 기본 생성자 호출" << endl;
-
-	}
-
-	Knight(int stamina) : Player(100)  // 선처리 영역의 생성자를 지정할 수 있다.
-	{
-		cout << "Knight(int) 기타 생성자 호출" << endl;
-		_stamina = stamina;
-	}
-
-	~Knight()
-	{
-		cout << "~Knight() 소멸자 호출" << endl;
-
-		/*
-			일종의 후(나중에)처리 영역이 존재
-			- 여기서 ~Player() 소멸자를 호출
-		*/
-	}
-
-	// 재정의: 부모님의 유산을 거부하고 새로운 이름으로 만든?
-	void Move() { cout << "Knight Move 호출" << endl; }
-public:
-	int _stamina;
-};
-
-class Mage : public Player
-{
-public:
-
-public:
-	int _mp;
+private:
+	int _hp = 100;
+	
 };
 
 int main()
 {
-	Knight k(100);
-
-	k._hp = 100;
-	k._attack = 10;
-	k._defence = 5;
-	//k._stamina = 50;
-
-	k.Move();
-	// k.Player::Move();  // 실무에서 거의 쓸 일이 없음. 이렇게 쓸 일이 있다는 것은 애초에 잘못 만든 것..
-	k.Attack();
-	k.Die();
+	Berserker b;
+	b.SetHp(20);
+	
 	
 	return 0;
-}  
+}
