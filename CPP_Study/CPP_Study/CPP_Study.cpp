@@ -5,12 +5,23 @@ using namespace std;
 
 // 참조 타입 변환은 프로그래머 인생에서 거의 사용한 적이 없었지만, 포인터 타입 변환은 실무에서도 많이 사용
 
+class Knight
+{
+public:
+	int _hp = 0;
+};
+
 class Item
 {
 public:
 	Item()
 	{
 		cout << "Item()" << endl;
+	}
+
+	Item(int itemType) : _itemType(itemType)
+	{
+
 	}
 
 	Item(const Item& item)
@@ -20,8 +31,8 @@ public:
 	~Item()
 	{
 		cout << "~Item()" << endl;
-	
 	}
+
 public:
 	int _itemType = 0;
 	int _itemDbId = 0;
@@ -29,54 +40,99 @@ public:
 	char _dummy[4096] = {};  // 이런 저런 정보들로 인해 비대해진 클래스라는 걸를 보이기 위한 더미데이터
 };
 
-void TestItem(Item item)
+enum ItemType
 {
-}
+	IT_WEAPON = 1,
+	IT_ARMOR = 2,
+};
 
-void TestItemPtr(Item* item)
+class Weapon : public Item
 {
+public:
+	Weapon() : Item(IT_WEAPON)
+	{
+		cout << "Weapon()" << endl;
+	}
+	~Weapon()
+	{
+		cout << "~Weapon()" << endl;
+	}
 
-}
+public:
+	int _damage = 0;
+};
+
+class Armor : public Item
+{
+public:
+	Armor() : Item(IT_ARMOR)
+	{
+		cout << "Armor()" << endl;
+	}
+	~Armor()
+	{
+		cout << "~Armor()" << endl;
+	}
+
+public:
+	int _defence = 0;
+};
 
 int main()
 {
-	// 복습
+	// 연관성이 없는 클래스 사이의 포인터 변환 테스트
 	{
-		// Stack [ type(4) dbid(4) dummy(4096) ]
-		Item item;
+		//  Stack [  주소   ]   -> Heap [ _hp(4) ]
+		Knight* knight = new Knight();
 
-		// Stack [  주소(4~8)  ]   -> Heap  [ type(4) dbid(4) dummy(4096)  ] 
-		Item* item2 = new Item();
+		// 암시적으로는 No
+		// 명시적으로 Ok
 
-		// 내부적으로 temp 변수를 만들어서 여기에 값을 복사하게 되는데, 이 과정에서 Item 클래스 복사 생성자 호출과 소멸자 호출이 일어남
-		// 그런데 이게 메모리 크기가 매우 크다면 매우 부담되는 연산이 될 것임
-		TestItem(item);
-		TestItem(*item2);
+		// Stack [  주소   ]   
+		/*Item* item = (Item*)knight;
+		item->_itemType = 2;
+		item->_itemDbId = 1;*/
 
-		// 반면에 포인터는 생성자 호출이 일어나지 않음. 객체를 생성할 필요가 없이 그냥 포인터가 넘어가기 떄문이다
-		TestItemPtr(&item);
-		TestItemPtr(item2);
+		delete knight;
+	}
 
-		// 이 부분을 누락하게 되면 메모리 누수(Memory Leak) -> 점점 가용 메모리가 줄어들어서 Crash
-		delete item2; 
+	// 부모 -> 자식 변환 테스트
+	{
+		Item* item = new Item();
 
-		// 배열
+		//Weapon* weapon = (Weapon*)item;
+		//weapon->_damage = 10;
+	}
+
+	// 자식 -> 부모 변환 테스트
+	{
+		Weapon* weapon = new Weapon();
+
+		// 암시적으로도 된다!
+		Item* item = weapon;
+
+		delete weapon;
+	}
+
+	// 명시적으로 타입 변환할 때는 항상 항상 조심해야 한다! 
+	// 암시적으로 될 때는 안전하다?
+	// -> 그러면 평생 명시적으로 타입 변환(캐스팅)은 안하면 되는거 아닌가?  NO
+
+	Item* inventory[20] = {};
+
+	srand((unsigned int)time(nullptr));
+
+	for (int i = 0; i < 20; i++)
+	{
+		int randValue = rand() & 2;  // 0 ~ 1
+		switch (randValue)
 		{
-			cout << "----------------------------------------" << endl;
-			// 진짜 아이템이 100개 있는 것  ( 스택 메모리에 올라와 있는)
-			Item item3[100] = {};  // 배열 선언만으로 생성자가 100번 호출됨.
-			
-			cout << "----------------------------------------" << endl;
-
-			// 아이템이 100개가 있을까요?
-			// 아이템을 가리키는 바구니가 100개 있다는 뜻. 실제 아이템은 1개도 없을 수도 있음
-			Item* item4[100] = {};   // 배열을 가리키는 포인터. 생성자가 호출되지 않음
-
-			for (int i = 0; i < 100; i++)
-				item4[i] = new Item();
-			cout << "----------------------------------------" << endl;
-			for (int i = 0; i < 100; i++)
-				delete item4[i];
+		case 0:
+			inventory[i] = new Weapon();
+			break;
+		case 1:
+			inventory[i] = new Armor();
+			break;
 		}
 	}
 
