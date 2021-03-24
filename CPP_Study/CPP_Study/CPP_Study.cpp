@@ -40,8 +40,34 @@ using namespace std;
 // - malloc (혹은 기타 calloc, realloc 등의 사촌) 을 통해 할당된 영역을 해제
 // - 힙 관리자가 할당/미할당 여부를 구분해서 관리
 
+// new / delete
+// - C++에 추가됨
+// - malloc/free 함수! new/delete는 연산자(operator)
+
+// new[] / delete[] 
+// 위에 방식 보다는 잘 사용하지는 않음
+// - new가 malloc에 비해 좋긴 한데~ 배열과 같이 N개 데이터를 같이 할당하려면?
+
+// malloc/free vs new/delete
+// - 사용 편의성 -> new/delete가 좋음
+// - 타입에 상관없이 특정한 크기의 메모리 영역을 할당받으려면? -> malloc/free 승!
+
+// 그런데 둘의 가장 가장 근본적인 중요한 차이는 따로 있음!
+// new/delete는 (생성타입이 클래스일 경우) 생성자/소멸자를 호출해준다!!!
+
+
 class Monster
 {
+public:
+	Monster()
+	{
+		cout << "Monster()" << endl;
+	}
+	~Monster()
+	{
+		cout << "~Monster()" << endl;
+	}
+
 public:
 	int _hp;
 	int _x;
@@ -75,7 +101,6 @@ int main()
 	void* pointer = malloc(sizeof(Monster));
 
 	Monster* m1 = (Monster*)pointer; // 사용 용도에 맞게 형변환해서 사용
-	m1->_hp = 100;
 
 	// Heap overflow
 	// - 유효한 힙 범위를 초과해서 사용하는 문제
@@ -100,6 +125,18 @@ int main()
 	pointer = nullptr;
 	m1 = nullptr;
 
+	Monster* m2 = new Monster;
+	m2->_hp = 200;
+	m2->_x = 2;
+	m2->_y = 3;
+	delete m2;
+
+	Monster* m3 = new Monster[5];
+
+	Monster* m4 = (m3 + 1);
+	m4->_hp = 200;
+
+	delete[] m3;
 
 	return 0;
 }
