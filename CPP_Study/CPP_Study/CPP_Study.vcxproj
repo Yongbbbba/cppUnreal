@@ -140,16 +140,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CPP_Study.cpp" />
-    <ClCompile Include="Creature.cpp" />
-    <ClCompile Include="Field.cpp" />
-    <ClCompile Include="Game.cpp" />
     <ClCompile Include="Monster.cpp" />
     <ClCompile Include="Player.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Creature.h" />
-    <ClInclude Include="Field.h" />
-    <ClInclude Include="Game.h" />
     <ClInclude Include="Monster.h" />
     <ClInclude Include="Player.h" />
   </ItemGroup>

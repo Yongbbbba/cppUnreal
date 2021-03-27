@@ -1,66 +1,26 @@
 #pragma once
-#include "Creature.h"
 
-// 일반적으로 헤더파일에는 선언만 해놓고 
-// cpp 파일에 구현한다. 하지만 구현이 간략한 경우에는 헤더파일에 하기도 한다.
-// 근데 이거는 회사마다 규칙에 따르면 될듯
+//#include "Monster.h"
 
-enum PlayerType
+// class는 설계도
+class Player
 {
-	PT_Knight = 1,
-	PT_Archer = 2,
-	PT_Mage = 3,
-};
 
-class Player : public Creature
-{
 public:
-	Player(int playerType) : Creature(CT_PLAYER), _playerType(playerType)
-	{
 
+	void KillMonster();
+
+	void KillMonster2()
+	{
+		_target2->_hp = 0;  // 런타임 에러 발생, 설계도의 세부사항을 모르니까!
+		// 하지만 이 부분을 monster.h가 include 된 cpp파일에서 동일하게 구현하면 에러가 발생하지 않는다. 왜? 설계도를 아니까 
 	}
 
-	// 왜 소멸자를 가상함수로 만드는지는 이전 강의 참고
-	virtual ~Player()
-	{
-
-	}
-
-	virtual void PrintInfo();
-
-protected:
-	int _playerType;
-};
-
-class Knight : public Player
-{
 public:
-	Knight() : Player(PT_Knight)
-	{
-		_hp = 150;
-		_attack = 10;
-		_defence = 5;
-	}
+	int _hp;
+	int _attack;
+
+	class Monster* _target2;
+	//Player* _target;   // 포인터를 사용하면 이것도 가능함 
 };
 
-class Archer : public Player
-{
-public:
-	Archer() : Player(PT_Archer)
-	{
-		_hp = 80;
-		_attack = 15;
-		_defence = 3;
-	}
-};
-
-class Mage : public Player
-{
-public:
-	Mage() : Player(PT_Mage)
-	{
-		_hp = 50;
-		_attack = 25;
-		_defence = 3;
-	}
-};
