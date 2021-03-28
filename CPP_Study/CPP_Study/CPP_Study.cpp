@@ -4,92 +4,93 @@ using namespace std;
 
 // 오늘의 주제 : 함수 포인터	
 
-int Add(int a, int b)
+
+int Test(int a, int b)
 {
-	return a + b;
+	cout << "Test" << endl;
+
+	return 0;
 }
 
-int Sub(int a, int b)
-{
-	return a - b;
-}
-
-class Item
+class Knight
 {
 public:
-	Item() : _itemID(0), _rarity(0), _owerId(0)
+
+	// 정적 함수
+	// 객체와 관련은 없음
+	static void HelloKnight()
 	{
 
 	}
 
+	// 멤버 함수 
+	int GetHp(int, int)
+	{
+		cout << "GetHp()" << endl;
+		return _hp;
+	}
 public:
-	int _itemID;  // 아이템을 구분하기 위한 ID
-	int _rarity;  // 희귀도
-	int _owerId;  // 소지자 ID
+	int _hp;
 };
 
-typedef bool(ITEM_SELECTOR)(Item* item);
 
-// bool(*selector)(Item* item), 세 번째 인자에 이것을 넣는 것과 저것은 같은 의미
-Item* FindItem(Item items[], int itemCount, ITEM_SELECTOR* selector )
-{
-	// 안전 체크
+// typedef의 진실
+// typedef 왼쪽 오른쪽값 -> 오른쪽 (커스텀 타입 정의)
 
-	for (int i = 0; i < itemCount; i++)
-	{
-		Item* item = &items[i];
-		// TODO 조건
-		if (selector(item))
-			return item;
-	}
+// 정확히는 왼쪽/오른쪽 기준이 아니라,
+// [선언 문법]에서 typedef을 앞에다 붙이는 쪽
 
-	return nullptr;
-}
+typedef int INTEGER;
+typedef int* POINTER;
+typedef int FUNC(int, int);
+typedef int ARRAY[20];
 
-bool IsRareItem(Item* item)
-{
-	return item->_rarity >= 2;
-}
+typedef int(*PFUNC)(int, int); // 함수 포인터 
+typedef int(Knight::*PMEMFUNC)(int, int);  // 멤버 함수 포인터 
+
 
 int main()
 {	
-	int a = 10;
-	
-	// 바구니 주소 
-	// pointer[ 주소 ]    => 주소 [ ]
-
-	typedef int DATA;
-
-	// 포인터 구성 요소
-	// 1) 포인터		*
-	// 2) 변수 이름     pointer
-	// 3) 데이터 타입	int
-	DATA* pointer = &a;
-
-	// 함수
-	typedef int(FUNC_TYPE)(int, int);
-	// using FUNC_TYPE = (int)(int a, int b);
 
 	// 함수 포인터 구성 요소
 	// 1) 포인터		*
 	// 2) 변수 이름     fn
-	// 3) 데이터 타입	함수(인자는 int, int 반환은 int)
-	FUNC_TYPE* fn;
+	// 3) 데이터 타입	함수(인자로 int 2개를 받고, int 1개를 반환)
 
-	// 함수 포인터
-	fn = Add;  // 시그니처가 동일하다면 이런 식으로 구현 가능
-	// fn = Sub; 로 바꾸는게 가능해진다! 재사용성이 높아짐
+	FUNC t;  // 일반적인 변수의 선언처럼 메모리에 올라가는 개념이 아님. 
 
-	// 함수의 이름은 함수의 시작 주소를 들고 있는 것 같음 (배열과 유사)
-	int result = fn(1, 2); // 기본 문법
-	cout << result << endl;
 
-	int result2 = (*fn)(1, 2); // 함수 포인터는 *(접근 연산자) 붙여도 함수 주소임
-	cout << result2 << endl;
+	int(*fn)(int, int);  // 함수 포인터 만들기
 
-	Item items[10] = {};
-	items[3]._rarity = 2;  // RARE
-	Item* rareItem = FindItem(items, 10, IsRareItem);  // 함수 파라미터로 함수를 넣을 수 있게 됨! 
+	//typedef int(FUNC_TYPE)(int, int);
+	// using FUNC_TYPE =  int(*)(int, int);
+
+	//FUNC_TYPE* fn;
+
+	fn = Test;
+	// fn = &Test;   //  & 생략 가능 (C언어 와의 호환성 때문)
+
+	fn(1, 2);
+
+	(*fn)(1, 2);
+
+	// 위 문법으로 [전역 함수 / 정적 함수/만 담을 수 있다 (호출 규약이 동일한 애들)
+	//fn = &Knight::GetHp;
+	
+	Knight k1;
+	k1.GetHp(1, 1);
+
+	PMEMFUNC mfn;
+
+	mfn = &Knight::GetHp;  // 멤버 함수에는 & 반드시 붙여야함
+	
+	(k1.*mfn)(1, 2);
+
+	Knight* k2 = new Knight();
+	((*k2).*mfn)(1, 1);
+	(k2->*mfn)(1, 1);   // 실무에서 잘 사용 안하는 문법이긴 함.. 서버 시간에 사용하기는 것
+
+	delete k2;
 
 	return 0; 
 }
