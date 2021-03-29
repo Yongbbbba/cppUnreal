@@ -2,65 +2,80 @@
 
 using namespace std;
 
-// 오늘의 주제 : 템플릿 기초
+// 오늘의 주제 : 콜백 (Callback)
 
-// typename T를 붙이면 '조커카드' (어떤 타입도 다 넣을 수 있음)
-// 그런데 무조건 typename을 붙여야 하는 것은 아니다
-// template<> 안에 들어가는건 [골라줘야 하는 목록]이라고 불 수 있음. 꼭 타입이 아니어도 된다는 것을 알 수 있다
-
-template<typename T, int SIZE>
-class RandomBox
+class Item
 {
 public:
-	T GetRandomData() 
+
+public:
+	int _itemId = 0 ;
+	int _rarity = 0;
+	int _ownerID = 0;
+};
+
+class FindByOwnerId
+{
+public:
+	bool operator() (const Item* item)
 	{
-		int idx = rand() % SIZE;
-		return _data[idx];
+		return (item->_itemId == _ownerId);
 	}
 
 public:
-	T _data[SIZE];
+	int _ownerId;
 };
 
-// 템플릿 특수화
-template<int SIZE>
-class RandomBox<double, SIZE>
+class FindByRarity
 {
 public:
-	double GetRandomData()
+	bool operator() (const Item* item)
 	{
-		cout << "RandomBox double" < endl;
-		int idx = rand() % SIZE;
-		return _data[idx];
+		return (item->_itemId >= _rarity);
 	}
 
 public:
-	double _data[SIZE];
+	int _rarity;
 };
+
+template<typename T>
+Item* FindItem(Item items[], int itemCount, T selector)
+{
+	for (int i = 0; i < itemCount; i++)
+	{
+		Item* item = &items[i];
+		// TODO : 조건 체크
+		if (selector(item))
+			return item;
+	}
+
+	return nullptr;
+}
 
 int main()
 {	
-	srand(static_cast<unsigned int>(time(nullptr)));
+	// 함수 포인터 + 함수 객체 + 템플릿
+	// 콜백 (Callback) : 다시 호출하다? 역으로 호출하다?
 
-	// 템플릿 : 함수나 클래스를 찍어내는 틀 
-	// 1) 함수 템플릿
-	// 2) 클래스 템플릿
+	// 게임을 만들 때 이런 콜백의 개념이 자주 등장한다.
+	// ex MoveTask 실습 등
 
-	RandomBox<int, 3> rb1;
-	
-	for (int i = 0; i < 10; i++)
-	{
-		rb1._data[i] = i;
-	}
-	int value1 = rb1.GetRandomData();
-	cout << value1 << endl;
+	// 어떤 상황이 일어나면 -> 이 기능을 호출해줘
+	// ex) UI 스킬 버튼을 누르면 -> 스킬을 쓰는 함수를 호출
 
-	RandomBox<float, 5> rb2;
-	for (int i = 0; i < 10; i++)
-	{
-		rb2._data[i] = i + 0.5f;
-	}
-	int value2 = rb2.GetRandomData();
-	cout << value2 << endl;
-	return 0; 
+	Item items[10];
+	items[3]._ownerID = 100;
+	items[8]._rarity = 2;
+
+	FindByOwnerId functor1;
+	functor1._ownerId = 100;
+
+	FindByRarity functor2;
+	functor2._rarity = 1;
+
+	Item* item1 = FindItem(items, 10, functor1);
+	Item* item2 = FindItem(items, 10, functor2);
+
+	return 0;
+
 }
