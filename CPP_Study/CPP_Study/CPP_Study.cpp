@@ -3,73 +3,64 @@
 using namespace std;
 
 // 오늘의 주제 : 템플릿 기초
-// 템플릿 가지고만 책을 한 권 쓸 수 있을 정도로 중요하고 방대한 개념이다.
-// 여기서는 STL을 사용하기 전에 개념을 이해햐기 위한 정도로 템플릿을 학습하고
-// 추후 고급 C++ 강의에서 템플릿을 다시 다루도록 ... 
 
-class Knight
+// typename T를 붙이면 '조커카드' (어떤 타입도 다 넣을 수 있음)
+// 그런데 무조건 typename을 붙여야 하는 것은 아니다
+// template<> 안에 들어가는건 [골라줘야 하는 목록]이라고 불 수 있음. 꼭 타입이 아니어도 된다는 것을 알 수 있다
+
+template<typename T, int SIZE>
+class RandomBox
 {
 public:
-	
+	T GetRandomData() 
+	{
+		int idx = rand() % SIZE;
+		return _data[idx];
+	}
+
 public:
-	int _hp = 100;
+	T _data[SIZE];
 };
 
-// 컴파일 단계에서 각기 다른 버전의 Print를 만들어낸다
-template<typename T>
-void Print(T a)
-{
-	cout << a << endl;
-}
-
 // 템플릿 특수화
-template<>
-void Print(Knight a)
+template<int SIZE>
+class RandomBox<double, SIZE>
 {
-	cout << "Knight !!!!!" << endl;
-	cout << a._hp << endl;
-}
+public:
+	double GetRandomData()
+	{
+		cout << "RandomBox double" < endl;
+		int idx = rand() % SIZE;
+		return _data[idx];
+	}
 
-template<typename T>
-T Add(T a, T b)
-{
-	return a + b;
-}
-
-template<typename T1, typename T2>
-void Print(T1 a, T2 b)
-{
-	cout << a << " " << b << endl;
-}
-
-//  연산자 오버로딩 (전역함수 버전)
-ostream& operator<<(ostream& os, const Knight& k)
-{
-	os << k._hp;
-	return os;
-}
-
-
+public:
+	double _data[SIZE];
+};
 
 int main()
 {	
+	srand(static_cast<unsigned int>(time(nullptr)));
+
 	// 템플릿 : 함수나 클래스를 찍어내는 틀 
 	// 1) 함수 템플릿
 	// 2) 클래스 템플릿
 
-	Print<int>(50);  // 이렇게 명시적으로 표현할 수도 있다 
-	Print(50.0f);
-	Print(50.0);
+	RandomBox<int, 3> rb1;
+	
+	for (int i = 0; i < 10; i++)
+	{
+		rb1._data[i] = i;
+	}
+	int value1 = rb1.GetRandomData();
+	cout << value1 << endl;
 
-	Print("Hello", 100);
-
-	int result1 = Add(1, 2);
-	float result2 = Add<float>(0.1f, 0.2f);
-
-	cout << result1 << " " << result2 << endl;
-
-	Knight k1;
-	Print(k1);
-
+	RandomBox<float, 5> rb2;
+	for (int i = 0; i < 10; i++)
+	{
+		rb2._data[i] = i + 0.5f;
+	}
+	int value2 = rb2.GetRandomData();
+	cout << value2 << endl;
 	return 0; 
 }
