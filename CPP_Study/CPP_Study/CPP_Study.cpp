@@ -23,6 +23,8 @@ int main()
 
 	vector<int> v(10);
 
+	v.reserve(1000);
+
 	for (vector<int>::size_type i = 0; i < v.size(); i++)
 		v[i] = i;
 
@@ -67,7 +69,43 @@ int main()
 		cout << (*it) << endl;   // 9 8 7 .... 0
 	}
 	
+	// - 중간 삽입/ 삭제 (BAD)
+	// - 처음/끝 삽입/삭제 (BAD / GOOD)
+	// - 임의 접근 (Random Access)
 
+	// C++의 기본기 부분. 아주아주 기본기
+
+	// vector = 동적 배열 = 동적으로 커지는 배열 = 배열
+	// 원소가 하나의 메모리 블록에 연속하게 저장된다 !!!
+
+	// 데이터를 줭간에 삽입 한다면..?
+	// [                            ]
+	// [0] [1] [2] [3] [4] [ ]  [ ] 
+
+	v.push_back(1);
+	v.pop_back();
+
+	// 3번째 데이터는 어디 있습니까?
+	//v[2] = 3;
+
+	vector<int>::iterator insertIt = v.insert(v.begin() + 2, 5);
+	vector<int>::iterator eraseIt1 = v.erase(v.begin() + 2);
+	vector<int>::iterator eraseIt2 = v.erase(v.begin() + 2, v.begin() + 4);
+
+	// 쭉 ~ 스캔을 하면서, 3이라는 데이터가 있으면 일괄 삭제하고 싶다
+	for (vector<int>::iterator it = v.begin(); it != v.end(); )
+	{
+		int data = *it;
+		if (data == 3)
+		{
+			// v.erase(it); // 이렇게 하면 컨테이너에 소속된 이터레이터 자체가 삭제되어버려서 이후 반복에서 더는 활용할 수 없음
+			it = v.erase(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
 	
 	return 0;
 
