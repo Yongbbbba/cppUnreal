@@ -1,80 +1,72 @@
 ﻿#include <iostream>
+#include <vector>
 
 using namespace std;
 
-// 오늘의 주제 : 콜백 (Callback)
+// 오늘의 주제 : vector
+// STL (Standard Template Library)
+// 프로그래밍할 때 필요한 자료구조/알고리즘들을
+// 템플릿으로 제공하는 라이브러리
 
-class Item
-{
-public:
+// 컨테이너(Container) : 데이터를 저장하는 객체 (자료구조 Data Structure, 데이터를 어떤 식을 저장할 것인가?) 
 
-public:
-	int _itemId = 0 ;
-	int _rarity = 0;
-	int _ownerID = 0;
-};
+// vector (동적 배열)
+// - vector의 동작 원리 (size/capacity)
+// - 중간 삽입/ 삭제 
+// - 처음/끝 삽입/삭제
+// - 임의 접근
 
-class FindByOwnerId
-{
-public:
-	bool operator() (const Item* item)
-	{
-		return (item->_itemId == _ownerId);
-	}
+// 동적 배열
+// 매우 매우 중요한 개념 -> 어떤 마법을 부렸길래 배열을 '유동적으로' 사용한 것인가?
 
-public:
-	int _ownerId;
-};
+// 1) (여유분을 두고) 메모리를 할당한다
+// 2) 여유분까지 꽉 찼으면, 메모리를 증설한다
 
-class FindByRarity
-{
-public:
-	bool operator() (const Item* item)
-	{
-		return (item->_itemId >= _rarity);
-	}
+// Q1) 여유분은 얼만큼이 적당할까? 
+// Q2) 증설을 얼만큼 해야할까?
+// Q3) 기존의 데이터를 어떻게 처리할까?
 
-public:
-	int _rarity;
-};
-
-template<typename T>
-Item* FindItem(Item items[], int itemCount, T selector)
-{
-	for (int i = 0; i < itemCount; i++)
-	{
-		Item* item = &items[i];
-		// TODO : 조건 체크
-		if (selector(item))
-			return item;
-	}
-
-	return nullptr;
-}
 
 int main()
 {	
-	// 함수 포인터 + 함수 객체 + 템플릿
-	// 콜백 (Callback) : 다시 호출하다? 역으로 호출하다?
+	// 배열
+	const int MAX_SIZE = 10;
+	int arr[MAX_SIZE] = {};
 
-	// 게임을 만들 때 이런 콜백의 개념이 자주 등장한다.
-	// ex MoveTask 실습 등
+	for (int i = 0; i < MAX_SIZE; i++)
+		arr[i] = i;
+	for (int i = 0; i < MAX_SIZE; i++)
+		cout << arr[i] << endl;
+	// 여기서 중간에 또는 추가로 데이터를 넣고 싶을 때는 어떻게 해야하는가? - 기본 정적 배열의 단점
 
-	// 어떤 상황이 일어나면 -> 이 기능을 호출해줘
-	// ex) UI 스킬 버튼을 누르면 -> 스킬을 쓰는 함수를 호출
+	// 동적 배열
 
-	Item items[10];
-	items[3]._ownerID = 100;
-	items[8]._rarity = 2;
+	vector<int> v;
+	// size (실제 사용 데이터 개수)
+	// capacity (여유분을 포함한 용량 개수)
+	// 컴파일러에 따라 여유분을 확보하는 정도가 다르다
+	// 이렇게 하는 이유가 뭘까?
+	// vector도 선형 자료구조이기 때문에 capa를 늘리기 위해서는 새로운 공간을 확보해야한다. 이런 이사비용이 존재하기 때문에 딱 맞춰서 늘리는게 아니라 여유분을 확보한다
+	// v.reserve(1000); // 수동으로 공간을 확보하는 방법
 
-	FindByOwnerId functor1;
-	functor1._ownerId = 100;
+	for (int i = 0; i < 1000; i++)
+	{
+		v.push_back(100);
+		cout << v.size() << " " << v.capacity() << endl;
+	}
 
-	FindByRarity functor2;
-	functor2._rarity = 1;
+	//v.push_back(1);
+	//v.push_back(2);
+	//v.push_back(3);
+	//v.push_back(4);
+	//v.push_back(5);
 
-	Item* item1 = FindItem(items, 10, functor1);
-	Item* item2 = FindItem(items, 10, functor2);
+	//const int size = v.size();
+
+	//for (int i = 0; i < size; i++)
+	//{
+	//	cout << v[i] << endl;
+	//}
 
 	return 0;
 
