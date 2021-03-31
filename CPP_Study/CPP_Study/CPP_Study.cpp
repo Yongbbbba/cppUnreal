@@ -4,109 +4,168 @@
 using namespace std;
 
 // 오늘의 주제 : vector
+template<typename T>
+class Iterator
+{
+public:
+	Iterator() : _ptr(nullptr)
+	{
 
+	}
 
+	Iterator(T* ptr) : _ptr(ptr)
+	{
 
+	}
+
+	// 전위형은 자기자신을 뱉어주는데 반해, 후위형은 복사값을 내뱉어준다. 그래서 (a++)++와 같이 쓸 수 없는 반면, ++(++a)는 가능한.
+	Iterator& operator++()
+	{
+		_ptr++;
+		return *this;
+	}
+
+	Iterator operator++(int)
+	{
+		Iterator temp = *this;
+		_ptr++; // 원본값을 증가시키기는 하지만 뱉어줄 때는 증가시키기 전을 뱉어줘야함. 후위형의 정의가 그런거니까.
+		return temp;
+	}
+
+	Iterator& operator--()
+	{
+		_ptr--;
+		return *this;
+	}
+
+	Iterator operator--(int)
+	{
+		Iterator temp = *this;
+		_ptr--;
+		return temp;
+	}
+
+	Iterator operator+(const int count)
+	{
+		Iterator temp = *this;
+		temp._ptr += count;
+		return temp;
+	}
+
+	Iterator operator-(const int count)
+	{
+		Iterator temp = *this;
+		temp._ptr -= count;
+		return temp;
+	}
+
+	bool operator==(const Iterator& right)
+	{
+		return  _ptr == right._ptr;
+	}
+
+	bool operator!=(const Iterator& right)
+	{
+		return !(*this == right);  // 위 == 연산자 오버로딩 재활용,   _ptr != right._ptr 과 같은 의미임
+	}
+
+	T& operator*()
+	{
+		return *_ptr;
+	}
+
+public:
+	T* _ptr;
+};
+
+template<typename T>
+class Vector
+{
+
+public:
+	Vector() : _data(nullptr), _size(0), _capacity(0)
+	{
+
+	}
+
+	~Vector()
+	{
+		if (_data)
+			delete[] _data;
+	}
+
+	// [     ]
+	void push_back(const T& val)
+	{
+		if (_size == _capacity)
+		{
+			// 증설 작업
+			int newCapacity = static_cast<int>(_capacity * 1.5);
+			if (newCapacity == _capacity)
+				newCapacity++;
+
+			reserve(newCapacity);
+		}
+
+		// 데이터 저장 및 개수 증가
+		_data[_size++] = val;
+	}
+
+	void reserve(int capacity)
+	{
+		_capacity = capacity;
+
+		T* newData = new T[_capacity];
+
+		// 데이터 복사
+		for (int i = 0; i < _size; i++)
+			newData[i] = _data[i];
+
+		// 기존에 있던 데이터 날리기
+		if (_data)
+			delete[] _data;
+
+		// 데이터 교체
+		_data = newData;
+	}
+
+	// 데이터를 조회하는 것 뿐만 아니라 값을 변경할 수도 있기 때문에 레퍼런스로 반환한다.
+	T& operator[](const int pos) { return _data[pos];  }
+
+	int size() { return _size; }
+	int capacity() { return _capacity; }
+
+public:
+	typedef Iterator<T> iterator;
+
+	iterator begin() { return iterator(&_data[0]); }
+	iterator end() { return begin() + _size; }
+
+private:
+	T* _data;
+	int _size;
+	int _capacity;
+};
 
 int main()
 {	
-	// 컨테이너(Container) : 데이터를 저장하는 객체 (자료구조 Data Structure, 데이터를 어떤 식을 저장할 것인가?) 
+	Vector<int> v;
+	v.reserve(100);
 
-	// vector (동적 배열)
-	// - vector의 동작 원리 (size/capacity)
-	// - 중간 삽입/ 삭제 
-	// - 처음/끝 삽입/삭제
-	// - 임의 접근
+	for (int i = 0; i < 100; i++)
+	{
+		v.push_back(i);
+		cout << v.size() << " " << v.capacity() << endl;
+	}
 
-	// 반복자(Iterator) : 포인터와 유사한 개념. 컨테이너의 원소(데이터)를 가리키고, 다음/이전 원소로 이동 가능
-
-
-	vector<int> v(10);
-
-	v.reserve(1000);
-
-	for (vector<int>::size_type i = 0; i < v.size(); i++)
-		v[i] = i;
-
-	//vector<int>::iterator it;
-
-	//int* ptr;
-	//
-	//it = v.begin();
-	//ptr = &v[0];
-
-	//cout << (*it) << endl;
-	//cout << (*ptr) << endl;
-
-	vector<int>::iterator itBegin = v.begin();
-	vector<int>::iterator itEnd = v.end();
-
-	// 참고로, ++it가 it++ 보다 미세하고 성능이 더 좋다. 그 이유는 iterator를 f12눌러서 확인해보면, 연산자 오버로딩할 때
-	// it++은 복사하는 작업이 하나 더 추가되기 때문이다.
-
-	// 더 복잡해보이는데? 이걸 왜 쓰는거야
-	// iterator는 vector 뿐만 아니라 다른 컨테이너에도 공통적으로 있는 개념
-	// STL 한정에서는 다른 컨테이너에서 보편적으로 쓰이기 때문에 통일성을 가질 수 있다.
-	// 다른 컨테이너는 v[i]와 같은 인덱스 접근이 안될 수도 있다
-	for (vector<int>::iterator it = v.begin(); it != v.end(); ++it)
+	for (int i = 0; i < v.size(); i++)
+	{
+		cout << v[i] << endl;
+	}
+	
+	for (Vector<int>::iterator it = v.begin(); it != v.end(); ++it)
 	{
 		cout << (*it) << endl;
 	}
-	
-	int* ptrBegin = &v[0];  // v.begin()._Ptr;
-	int* ptrEnd = ptrBegin + 10;  // v.end()._PTr;
-	for (int* ptr = ptrBegin; ptr != ptrEnd; ++ptr)
-	{
-		cout << (*ptr) << endl;
-	}
-
-	// const int*;
-	//vector<int>::const_iterator cit1 = v.cbegin();
-
-	// 이건 뭐 거의 쓸 일 없음
-	for (vector<int>::reverse_iterator it = v.rbegin(); it != v.rend(); ++it)
-	{
-		cout << (*it) << endl;   // 9 8 7 .... 0
-	}
-	
-	// - 중간 삽입/ 삭제 (BAD)
-	// - 처음/끝 삽입/삭제 (BAD / GOOD)
-	// - 임의 접근 (Random Access)
-
-	// C++의 기본기 부분. 아주아주 기본기
-
-	// vector = 동적 배열 = 동적으로 커지는 배열 = 배열
-	// 원소가 하나의 메모리 블록에 연속하게 저장된다 !!!
-
-	// 데이터를 줭간에 삽입 한다면..?
-	// [                            ]
-	// [0] [1] [2] [3] [4] [ ]  [ ] 
-
-	v.push_back(1);
-	v.pop_back();
-
-	// 3번째 데이터는 어디 있습니까?
-	//v[2] = 3;
-
-	vector<int>::iterator insertIt = v.insert(v.begin() + 2, 5);
-	vector<int>::iterator eraseIt1 = v.erase(v.begin() + 2);
-	vector<int>::iterator eraseIt2 = v.erase(v.begin() + 2, v.begin() + 4);
-
-	// 쭉 ~ 스캔을 하면서, 3이라는 데이터가 있으면 일괄 삭제하고 싶다
-	for (vector<int>::iterator it = v.begin(); it != v.end(); )
-	{
-		int data = *it;
-		if (data == 3)
-		{
-			// v.erase(it); // 이렇게 하면 컨테이너에 소속된 이터레이터 자체가 삭제되어버려서 이후 반복에서 더는 활용할 수 없음
-			it = v.erase(it);
-		}
-		else
-		{
-			++it;
-		}
-	}
-	
 	return 0;
-
 }
