@@ -4,70 +4,71 @@
 using namespace std;
 
 // 오늘의 주제 : vector
-// STL (Standard Template Library)
-// 프로그래밍할 때 필요한 자료구조/알고리즘들을
-// 템플릿으로 제공하는 라이브러리
 
-// 컨테이너(Container) : 데이터를 저장하는 객체 (자료구조 Data Structure, 데이터를 어떤 식을 저장할 것인가?) 
 
-// vector (동적 배열)
-// - vector의 동작 원리 (size/capacity)
-// - 중간 삽입/ 삭제 
-// - 처음/끝 삽입/삭제
-// - 임의 접근
-
-// 동적 배열
-// 매우 매우 중요한 개념 -> 어떤 마법을 부렸길래 배열을 '유동적으로' 사용한 것인가?
-
-// 1) (여유분을 두고) 메모리를 할당한다
-// 2) 여유분까지 꽉 찼으면, 메모리를 증설한다
-
-// Q1) 여유분은 얼만큼이 적당할까? 
-// Q2) 증설을 얼만큼 해야할까?
-// Q3) 기존의 데이터를 어떻게 처리할까?
 
 
 int main()
 {	
-	// 배열
-	const int MAX_SIZE = 10;
-	int arr[MAX_SIZE] = {};
+	// 컨테이너(Container) : 데이터를 저장하는 객체 (자료구조 Data Structure, 데이터를 어떤 식을 저장할 것인가?) 
 
-	for (int i = 0; i < MAX_SIZE; i++)
-		arr[i] = i;
-	for (int i = 0; i < MAX_SIZE; i++)
-		cout << arr[i] << endl;
-	// 여기서 중간에 또는 추가로 데이터를 넣고 싶을 때는 어떻게 해야하는가? - 기본 정적 배열의 단점
+	// vector (동적 배열)
+	// - vector의 동작 원리 (size/capacity)
+	// - 중간 삽입/ 삭제 
+	// - 처음/끝 삽입/삭제
+	// - 임의 접근
 
-	// 동적 배열
+	// 반복자(Iterator) : 포인터와 유사한 개념. 컨테이너의 원소(데이터)를 가리키고, 다음/이전 원소로 이동 가능
 
-	vector<int> v;
-	// size (실제 사용 데이터 개수)
-	// capacity (여유분을 포함한 용량 개수)
-	// 컴파일러에 따라 여유분을 확보하는 정도가 다르다
-	// 이렇게 하는 이유가 뭘까?
-	// vector도 선형 자료구조이기 때문에 capa를 늘리기 위해서는 새로운 공간을 확보해야한다. 이런 이사비용이 존재하기 때문에 딱 맞춰서 늘리는게 아니라 여유분을 확보한다
-	// v.reserve(1000); // 수동으로 공간을 확보하는 방법
 
-	for (int i = 0; i < 1000; i++)
+	vector<int> v(10);
+
+	for (vector<int>::size_type i = 0; i < v.size(); i++)
+		v[i] = i;
+
+	//vector<int>::iterator it;
+
+	//int* ptr;
+	//
+	//it = v.begin();
+	//ptr = &v[0];
+
+	//cout << (*it) << endl;
+	//cout << (*ptr) << endl;
+
+	vector<int>::iterator itBegin = v.begin();
+	vector<int>::iterator itEnd = v.end();
+
+	// 참고로, ++it가 it++ 보다 미세하고 성능이 더 좋다. 그 이유는 iterator를 f12눌러서 확인해보면, 연산자 오버로딩할 때
+	// it++은 복사하는 작업이 하나 더 추가되기 때문이다.
+
+	// 더 복잡해보이는데? 이걸 왜 쓰는거야
+	// iterator는 vector 뿐만 아니라 다른 컨테이너에도 공통적으로 있는 개념
+	// STL 한정에서는 다른 컨테이너에서 보편적으로 쓰이기 때문에 통일성을 가질 수 있다.
+	// 다른 컨테이너는 v[i]와 같은 인덱스 접근이 안될 수도 있다
+	for (vector<int>::iterator it = v.begin(); it != v.end(); ++it)
 	{
-		v.push_back(100);
-		cout << v.size() << " " << v.capacity() << endl;
+		cout << (*it) << endl;
+	}
+	
+	int* ptrBegin = &v[0];  // v.begin()._Ptr;
+	int* ptrEnd = ptrBegin + 10;  // v.end()._PTr;
+	for (int* ptr = ptrBegin; ptr != ptrEnd; ++ptr)
+	{
+		cout << (*ptr) << endl;
 	}
 
-	//v.push_back(1);
-	//v.push_back(2);
-	//v.push_back(3);
-	//v.push_back(4);
-	//v.push_back(5);
+	// const int*;
+	//vector<int>::const_iterator cit1 = v.cbegin();
 
-	//const int size = v.size();
+	// 이건 뭐 거의 쓸 일 없음
+	for (vector<int>::reverse_iterator it = v.rbegin(); it != v.rend(); ++it)
+	{
+		cout << (*it) << endl;   // 9 8 7 .... 0
+	}
+	
 
-	//for (int i = 0; i < size; i++)
-	//{
-	//	cout << v[i] << endl;
-	//}
-
+	
 	return 0;
 
 }
