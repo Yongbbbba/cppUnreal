@@ -5,89 +5,205 @@
 using namespace std;
 
 // 오늘의 주제 : list
-// vector는 동적 방식, list는 node 방식
 
-// vector : 동적 배열
-// [      ]
-// [                   ]  필요하면 용량 증설
-
-// [ data(4)   next( data(4) next(    )  .... ] 
-// 문법적으로 말이 안되는 표현
-//class Node2
-//{
-//public:
-//	Node2 _next;
-//	int _data;
-//};
-
-// [ data(4) next(4or8) ]
+template<typename T>
 class Node
 {
 public:
+	Node() : _next(nullptr), _prev(nullptr), _data(T())
+	{
+
+	}
+	Node(const T& value) : _next(nullptr), _prev(nullptr), _data(value)
+	{
+
+	}
 public:
-	Node* _next;
-	int _data;
-	Node* _prev;
+	Node*	_next;
+	Node*	_prev;
+	T		_data;
 };
 
-// 단일 / 이중 / 원형
-// list : 연결 리스트
+template<typename T>
+class Iterator
+{
+public:
+	Iterator() : _node(nullptr)
+	{
+	}
+	Iterator(Node<T>* node) : _node(node)
+	{
 
-// [1]    ->   [2]  -> [3]      -> [4]    ->  [5]    -> 연속된 공간에 배치되지는 않음
+	}
+
+	// ++it
+	Iterator& operator++()
+	{
+		_node = _node->_next;
+		return *this;
+	}
+
+	// it++
+	Iterator operator++(int)
+	{
+		Iterator<T> temp = *this;
+		_node = _node->_next;
+		return temp;
+	}
+
+	// --it
+	Iterator& operator--()
+	{
+		_node = _node->_prev;
+		return *this;
+	}
+	// it--
+	Iterator operator--(int)
+	{
+		Iterator<T> temp = *this;
+		_node = _node->_prev;
+		return temp;
+	}
+
+	T& operator*()
+	{
+		return _node->_data;
+	}
+
+	bool operator==(const Iterator& right)
+	{
+		return _node == right._node;
+	}
+
+	bool operator!=(const Iterator& right)
+	{
+		return _node != right._node;
+	}
+
+public:
+	Node<T>* _node;
+};
+
+//  <-> [ header ] <->
+// [1] <-> [2] <-> [3] <-> [ header ]  <-> [1]..
+template<typename T>
+class List
+{
+public:
+	List() : _size(0)
+	{
+		_header = new Node<T>();
+		_header->_next = _header;
+		_header->_prev = _header;
+	}
+	~List()
+	{
+		while (_size > 0)
+			pop_back();
+
+		delete _header;
+	}
+
+	void push_back(const T& value)
+	{
+		AddNode(_header, value);
+	}
+
+	// [1] <-> [2] <-> [3] <-> [4] <-> [ header ]  <-> 
+	// [1] <-> [2] <-> [3] <-> [ header ]  <-> 
+	void pop_back()
+	{
+		RemoveNode(_header->_prev);
+	}
+
+	// <-> [ header ] <->
+	// [1] <-> [2] <-> [before] <-> [4] <-> [ header ] <->
+	// [1] <-> [2] - [node] -  [before] <-> [4] <-> [ header ] <->
+	Node<T>* AddNode(Node<T>* before, const T& value)
+	{
+		Node<T>* node = new Node<T>(value);
+
+		Node<T>* prevNode = before->_prev;
+		prevNode->_next = node;
+		node->_prev = prevNode;
+		
+		node->_next = before;
+		before->_prev = node;
+
+		_size++;
+
+		return node;
+
+	}
+
+	// [1] <-> [prevNode] <-> [node]  <-> [nextNode] <-> [ header ]  <-> 
+	// [1] <-> [prevNode] <-> [nextNode] <-> [ header ]  <-> 
+	Node<T>* RemoveNode(Node<T>* node)
+	{
+		Node<T>* prevNode = node->_prev;
+		Node<T>* nextNode = node->_next;
+
+		prevNode->_next = nextNode;
+		nextNode->_prev = prevNode;
+
+		delete node;
+
+		_size--;
+
+		return nextNode;
+	}
+
+	int size() { return _size; }
+
+public:
+	typedef Iterator<T> iterator;
+
+	iterator begin() { return iterator(_header->_next); }
+	iterator end() { return iterator(_header); }
+	iterator insert(iterator it, const T& value)
+	{
+		AddNode(it._node, value);
+		return iterator(AddNode(it._node, value));
+	}
+
+	iterator erase(iterator it)
+	{
+		Node<T>* node = RemoveNode(it._node);
+		return iterator(node);
+	}
+
+public:
+	Node<T>* _header;
+	int _size;
+};
 
 
 
 int main()
 {	
-	// list (연결 리스트)
-	// - list의 동작 원리
-	// - 중간 삽입/삭제 (GOOD / GOOD)
-	// - 처음/끝 삽입/삭제 ( GOOD / GOOD )
-	// - 임의 접근 (i번째 데이터는 어디 있습니까?) BAD, 임의 접근 연산자 자체가 없음 그래서.
+	List<int> li;
+	List<int>::iterator eraseIt;
 
-	list<int> li;
-
-	for (int i=0; i< 100; i++)
-		li.push_back(i);
-
-	//li.push_front(10);
-	int size = li.size();
-	//li.capacity(); // 없음
-	
-	int first = li.front();
-	int last = li.back();
-
-	//li[3] = 10; // 없음
-
-	list<int>::iterator itBegin = li.begin();
-	list<int>::iterator itEnd = li.end();
-
-	int* ptrBegin = &(li.front());
-	int* ptrEnd = &(li.back());
-
-	for (list<int>::iterator it = li.begin(); it != li.end(); ++it)
+	for (int i = 0; i < 10; i++)
 	{
-		cout << *it << endl;
+		if (i == 5)
+		{
+			eraseIt = li.insert(li.end(), i);
+		}
+		else
+		{
+			li.push_back(i);
+		}
 	}
 
-	//li.insert(itBegin, 100);
+	li.pop_back();
 
-	//li.erase(li.begin());
+	li.erase(eraseIt);
 
-	//li.pop_front();
-
-	//li.remove(10); // 10의 값과 동일한 데이터를 모두 삭제, vector의 경우 중간 값을 삭제하는 것이 매우 비효율적이기 때문에 vector에는 이런게 없음
-
-	// * 임의 접근이 안 된다
-	// * 그런데 중간 삽입/삭제 빠르다? 
-
-	// 50번 인덱스에 있는 데이터를 삭제!
-	list<int>::iterator it = li.begin();
-	for (int i = 0; i < 50; i++)
-		++it;
-	// 리스트의 삭제가 빠르다는 것은 탐색/삭제 둘을 분리해서 봤을 때 그렇다는 것이다.벡터는 위치를 알아도 삭제 작업 자체가 느리니깐.
-	li.erase(it);
-
+	for (List<int>::iterator it = li.begin(); it != li.end(); ++it)
+	{
+		cout << (*it) << endl;
+	}
 
 	return 0;
 }
