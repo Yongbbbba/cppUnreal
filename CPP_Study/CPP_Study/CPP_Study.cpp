@@ -4,48 +4,41 @@
 
 using namespace std;
 
-// 오늘의 주제 : delete (삭제된 함수)
-// 자주 활용되는 문법은 아니지만 종종 등장
+// 오늘의 주제 : override, final
 
-class Knight
+class Player
 {
 public:
-
-
-//private:
-//	// 정의되지 않은 비공개(private)함수
-//	// 이렇게 하면 = 연산자를 사용할 수 없음.   knight2 = knight1 같은 것들.
-//	void operator=(const Knight& k)
-//	{
-//
-//	}
-//	friend class Admin;  // Admin class에는 내 private을 쓸 수 있게 열어준다. 사실 friend를 쓴다는 것은 설계가 잘못된 경우가 다수..
-
-public:
-	void operator=(const Knight& k) = delete;
-private:
-	int _hp = 100;
+	virtual void Attack()
+	{
+		cout << "Player!" << endl;
+	}
 };
 
-class Admin
+class Knight : public Player
 {
 public:
-	void CopyKnight(const Knight& k)
+	// 재정의(override)
+	// 이것만 보아서는 최초로 virtual을 선언한 곳이 어딘지 알 수 없음 -> override
+	
+	virtual void Attack() override  // final -> 내 자식들은 더이상 이 함수를 오버라이딩 할 수 없다.
 	{
-		Knight k1;
-		// 복사 연산 
-		k1 = k;
+		cout << "Knight!" << endl;
+	}
+
+	// 오버로딩(overloading) : 함수 이름의 재사용
+	void Attack(int a)
+	{
+
 	}
 };
 
 int main()
-{	
-	Knight k1;
-	Knight k2;
+{
 
-	// 복사 연산자
-	//k1 = k2;
+	Player* player = new Knight();
 
+	player->Attack();
 	
 	return 0;
 }
