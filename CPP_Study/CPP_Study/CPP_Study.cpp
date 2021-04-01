@@ -1,171 +1,82 @@
 ﻿#include <iostream>
 #include <vector>
+#include <list>
 
 using namespace std;
 
-// 오늘의 주제 : vector
-template<typename T>
-class Iterator
+// 오늘의 주제 : list
+// vector는 동적 방식, list는 node 방식
+
+// vector : 동적 배열
+// [      ]
+// [                   ]  필요하면 용량 증설
+
+// [ data(4)   next( data(4) next(    )  .... ] 
+// 문법적으로 말이 안되는 표현
+//class Node2
+//{
+//public:
+//	Node2 _next;
+//	int _data;
+//};
+
+// [ data(4) next(4or8) ]
+class Node
 {
 public:
-	Iterator() : _ptr(nullptr)
-	{
-
-	}
-
-	Iterator(T* ptr) : _ptr(ptr)
-	{
-
-	}
-
-	// 전위형은 자기자신을 뱉어주는데 반해, 후위형은 복사값을 내뱉어준다. 그래서 (a++)++와 같이 쓸 수 없는 반면, ++(++a)는 가능한.
-	Iterator& operator++()
-	{
-		_ptr++;
-		return *this;
-	}
-
-	Iterator operator++(int)
-	{
-		Iterator temp = *this;
-		_ptr++; // 원본값을 증가시키기는 하지만 뱉어줄 때는 증가시키기 전을 뱉어줘야함. 후위형의 정의가 그런거니까.
-		return temp;
-	}
-
-	Iterator& operator--()
-	{
-		_ptr--;
-		return *this;
-	}
-
-	Iterator operator--(int)
-	{
-		Iterator temp = *this;
-		_ptr--;
-		return temp;
-	}
-
-	Iterator operator+(const int count)
-	{
-		Iterator temp = *this;
-		temp._ptr += count;
-		return temp;
-	}
-
-	Iterator operator-(const int count)
-	{
-		Iterator temp = *this;
-		temp._ptr -= count;
-		return temp;
-	}
-
-	bool operator==(const Iterator& right)
-	{
-		return  _ptr == right._ptr;
-	}
-
-	bool operator!=(const Iterator& right)
-	{
-		return !(*this == right);  // 위 == 연산자 오버로딩 재활용,   _ptr != right._ptr 과 같은 의미임
-	}
-
-	T& operator*()
-	{
-		return *_ptr;
-	}
-
 public:
-	T* _ptr;
+	Node* _next;
+	int _data;
+	Node* _prev;
 };
 
-template<typename T>
-class Vector
-{
+// 단일 / 이중 / 원형
+// list : 연결 리스트
 
-public:
-	Vector() : _data(nullptr), _size(0), _capacity(0)
-	{
+// [1]    ->   [2]  -> [3]      -> [4]    ->  [5]    -> 연속된 공간에 배치되지는 않음
 
-	}
 
-	~Vector()
-	{
-		if (_data)
-			delete[] _data;
-	}
-
-	// [     ]
-	void push_back(const T& val)
-	{
-		if (_size == _capacity)
-		{
-			// 증설 작업
-			int newCapacity = static_cast<int>(_capacity * 1.5);
-			if (newCapacity == _capacity)
-				newCapacity++;
-
-			reserve(newCapacity);
-		}
-
-		// 데이터 저장 및 개수 증가
-		_data[_size++] = val;
-	}
-
-	void reserve(int capacity)
-	{
-		_capacity = capacity;
-
-		T* newData = new T[_capacity];
-
-		// 데이터 복사
-		for (int i = 0; i < _size; i++)
-			newData[i] = _data[i];
-
-		// 기존에 있던 데이터 날리기
-		if (_data)
-			delete[] _data;
-
-		// 데이터 교체
-		_data = newData;
-	}
-
-	// 데이터를 조회하는 것 뿐만 아니라 값을 변경할 수도 있기 때문에 레퍼런스로 반환한다.
-	T& operator[](const int pos) { return _data[pos];  }
-
-	int size() { return _size; }
-	int capacity() { return _capacity; }
-
-public:
-	typedef Iterator<T> iterator;
-
-	iterator begin() { return iterator(&_data[0]); }
-	iterator end() { return begin() + _size; }
-
-private:
-	T* _data;
-	int _size;
-	int _capacity;
-};
 
 int main()
 {	
-	Vector<int> v;
-	v.reserve(100);
+	// list (연결 리스트)
+	// - list의 동작 원리
+	// - 중간 삽입/삭제
+	// - 처음/끝 삽입/삭제
+	// - 임의 접근
 
-	for (int i = 0; i < 100; i++)
-	{
-		v.push_back(i);
-		cout << v.size() << " " << v.capacity() << endl;
-	}
+	list<int> li;
 
-	for (int i = 0; i < v.size(); i++)
-	{
-		cout << v[i] << endl;
-	}
+	for (int i=0; i< 100; i++)
+		li.push_back(i);
+
+	//li.push_front(10);
+	int size = li.size();
+	//li.capacity(); // 없음
 	
-	for (Vector<int>::iterator it = v.begin(); it != v.end(); ++it)
+	int first = li.front();
+	int last = li.back();
+
+	//li[3] = 10; // 없음
+
+	list<int>::iterator itBegin = li.begin();
+	list<int>::iterator itEnd = li.end();
+
+	for (list<int>::iterator it = li.begin(); it != li.end(); ++it)
 	{
-		cout << (*it) << endl;
+		cout << *it << endl;
 	}
+
+	li.insert(itBegin, 100);
+
+	li.erase(li.begin());
+
+	li.pop_front();
+
+	li.remove(10); // 10의 값과 동일한 데이터를 모두 삭제, vector의 경우 중간 값을 삭제하는 것이 매우 비효율적이기 때문에 vector에는 이런게 없음
+
+	
+
+
 	return 0;
 }
