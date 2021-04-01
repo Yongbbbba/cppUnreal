@@ -4,44 +4,48 @@
 
 using namespace std;
 
-// 오늘의 주제 : enum class
+// 오늘의 주제 : delete (삭제된 함수)
+// 자주 활용되는 문법은 아니지만 종종 등장
 
-// unscoped enum (범위없는)
-enum PlayerType
+class Knight
 {
-	PT_Knight,  // 0
-	PT_Archer,  // 1
-	PT_mage,  // 2
+public:
+
+
+//private:
+//	// 정의되지 않은 비공개(private)함수
+//	// 이렇게 하면 = 연산자를 사용할 수 없음.   knight2 = knight1 같은 것들.
+//	void operator=(const Knight& k)
+//	{
+//
+//	}
+//	friend class Admin;  // Admin class에는 내 private을 쓸 수 있게 열어준다. 사실 friend를 쓴다는 것은 설계가 잘못된 경우가 다수..
+
+public:
+	void operator=(const Knight& k) = delete;
+private:
+	int _hp = 100;
 };
 
-enum class ObjectType
+class Admin
 {
-	Player,
-	Monster,
-	Projectile
-};
-
-enum class ObjectType2
-{
-	Player,
-	Monster,
-	Projectile
+public:
+	void CopyKnight(const Knight& k)
+	{
+		Knight k1;
+		// 복사 연산 
+		k1 = k;
+	}
 };
 
 int main()
 {	
-	// enum class (scoped enum)
-	// 1) 이름공간 관리에 이점 (scoped)
-	// 2) 암묵적인 변환 금지 - 장점이 될 수도 있고, 단점이 될 수도 있음
-	double value = static_cast<double>(ObjectType::Player);
+	Knight k1;
+	Knight k2;
 
-	int choice;
-	cin >> choice;
+	// 복사 연산자
+	//k1 = k2;
 
-	if (choice == static_cast<int>(ObjectType::Monster));
-	{
-
-	}
-
+	
 	return 0;
 }
