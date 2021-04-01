@@ -4,205 +4,43 @@
 
 using namespace std;
 
-// 오늘의 주제 : list
+// 오늘의 주제 : enum class
 
-template<typename T>
-class Node
+// unscoped enum (범위없는)
+enum PlayerType
 {
-public:
-	Node() : _next(nullptr), _prev(nullptr), _data(T())
-	{
-
-	}
-	Node(const T& value) : _next(nullptr), _prev(nullptr), _data(value)
-	{
-
-	}
-public:
-	Node*	_next;
-	Node*	_prev;
-	T		_data;
+	PT_Knight,  // 0
+	PT_Archer,  // 1
+	PT_mage,  // 2
 };
 
-template<typename T>
-class Iterator
+enum class ObjectType
 {
-public:
-	Iterator() : _node(nullptr)
-	{
-	}
-	Iterator(Node<T>* node) : _node(node)
-	{
-
-	}
-
-	// ++it
-	Iterator& operator++()
-	{
-		_node = _node->_next;
-		return *this;
-	}
-
-	// it++
-	Iterator operator++(int)
-	{
-		Iterator<T> temp = *this;
-		_node = _node->_next;
-		return temp;
-	}
-
-	// --it
-	Iterator& operator--()
-	{
-		_node = _node->_prev;
-		return *this;
-	}
-	// it--
-	Iterator operator--(int)
-	{
-		Iterator<T> temp = *this;
-		_node = _node->_prev;
-		return temp;
-	}
-
-	T& operator*()
-	{
-		return _node->_data;
-	}
-
-	bool operator==(const Iterator& right)
-	{
-		return _node == right._node;
-	}
-
-	bool operator!=(const Iterator& right)
-	{
-		return _node != right._node;
-	}
-
-public:
-	Node<T>* _node;
+	Player,
+	Monster,
+	Projectile
 };
 
-//  <-> [ header ] <->
-// [1] <-> [2] <-> [3] <-> [ header ]  <-> [1]..
-template<typename T>
-class List
+enum class ObjectType2
 {
-public:
-	List() : _size(0)
-	{
-		_header = new Node<T>();
-		_header->_next = _header;
-		_header->_prev = _header;
-	}
-	~List()
-	{
-		while (_size > 0)
-			pop_back();
-
-		delete _header;
-	}
-
-	void push_back(const T& value)
-	{
-		AddNode(_header, value);
-	}
-
-	// [1] <-> [2] <-> [3] <-> [4] <-> [ header ]  <-> 
-	// [1] <-> [2] <-> [3] <-> [ header ]  <-> 
-	void pop_back()
-	{
-		RemoveNode(_header->_prev);
-	}
-
-	// <-> [ header ] <->
-	// [1] <-> [2] <-> [before] <-> [4] <-> [ header ] <->
-	// [1] <-> [2] - [node] -  [before] <-> [4] <-> [ header ] <->
-	Node<T>* AddNode(Node<T>* before, const T& value)
-	{
-		Node<T>* node = new Node<T>(value);
-
-		Node<T>* prevNode = before->_prev;
-		prevNode->_next = node;
-		node->_prev = prevNode;
-		
-		node->_next = before;
-		before->_prev = node;
-
-		_size++;
-
-		return node;
-
-	}
-
-	// [1] <-> [prevNode] <-> [node]  <-> [nextNode] <-> [ header ]  <-> 
-	// [1] <-> [prevNode] <-> [nextNode] <-> [ header ]  <-> 
-	Node<T>* RemoveNode(Node<T>* node)
-	{
-		Node<T>* prevNode = node->_prev;
-		Node<T>* nextNode = node->_next;
-
-		prevNode->_next = nextNode;
-		nextNode->_prev = prevNode;
-
-		delete node;
-
-		_size--;
-
-		return nextNode;
-	}
-
-	int size() { return _size; }
-
-public:
-	typedef Iterator<T> iterator;
-
-	iterator begin() { return iterator(_header->_next); }
-	iterator end() { return iterator(_header); }
-	iterator insert(iterator it, const T& value)
-	{
-		AddNode(it._node, value);
-		return iterator(AddNode(it._node, value));
-	}
-
-	iterator erase(iterator it)
-	{
-		Node<T>* node = RemoveNode(it._node);
-		return iterator(node);
-	}
-
-public:
-	Node<T>* _header;
-	int _size;
+	Player,
+	Monster,
+	Projectile
 };
-
-
 
 int main()
 {	
-	List<int> li;
-	List<int>::iterator eraseIt;
+	// enum class (scoped enum)
+	// 1) 이름공간 관리에 이점 (scoped)
+	// 2) 암묵적인 변환 금지 - 장점이 될 수도 있고, 단점이 될 수도 있음
+	double value = static_cast<double>(ObjectType::Player);
 
-	for (int i = 0; i < 10; i++)
+	int choice;
+	cin >> choice;
+
+	if (choice == static_cast<int>(ObjectType::Monster));
 	{
-		if (i == 5)
-		{
-			eraseIt = li.insert(li.end(), i);
-		}
-		else
-		{
-			li.push_back(i);
-		}
-	}
 
-	li.pop_back();
-
-	li.erase(eraseIt);
-
-	for (List<int>::iterator it = li.begin(); it != li.end(); ++it)
-	{
-		cout << (*it) << endl;
 	}
 
 	return 0;
