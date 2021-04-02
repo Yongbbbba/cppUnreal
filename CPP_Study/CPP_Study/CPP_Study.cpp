@@ -63,9 +63,20 @@ int main()
 		/*int _key;
 		Player* _value;*/
 	};
-
+	srand(static_cast<unsigned int>(time(nullptr)));
 	// (Key, value)
 	map<int, int> m;
+
+	pair<map<int, int>::iterator, bool> ok;
+	
+	ok = m.insert(make_pair(1, 100));
+	ok = m.insert(make_pair(1, 200));
+
+
+	// 이미 존재하는 키라면 insert 되지 않음. 해당 키에 다른 값을 넣고 싶으면 insert말고 다른 걸 써야함
+
+	m.insert(make_pair(1, 100));
+	m.insert(make_pair(1, 200));
 
 	// 10만명
 	for (int i = 0; i < 100000; i++)
@@ -84,8 +95,62 @@ int main()
 
 	// Q) ID = 1만인 Player 찾고 싶다!
 	// A) 매우 빠르게 찾을 수 있음
+	unsigned int count = 0;
+	count = m.erase(10000);
+	count = m.erase(10000);
 	
-	m.find(10000);
+	map<int,int>::iterator findIt = m.find(10000);
+
+
+	if (findIt != m.end())
+	{
+		cout << "찾음" << endl;
+	}
+
+	// 끝까지 10000을 못찾았다는 이야기
+	else
+	{
+		cout << "못찾음" << endl;
+	}
+
+	// map 순회
+	// v[0] ~ v[i] 
+	for (map<int, int>::iterator it = m.begin(); it != m.end(); ++it)
+	{
+		pair<const int, int>& p = (*it);
+		int key = p.first;   // it->first;
+		int value = p.second; // it->second;
+		
+		cout << key << " " << value << endl;
+	}
+
+	// 없으면 추가, 있으면 수정
+
+	map<int, int>::iterator findIt = m.find(10000);
+	if (findIt != m.end())
+	{
+		findIt->second = 200;
+	}
+	else
+	{
+		m.insert(make_pair(10000, 200));
+	}
+
+	// 없으면 추가, 있으면 수정 v2
+	m[5] = 500;
+
+	m.clear();
+	// [] 연산자 사용할 때 주의할 점
+	// 대입을 하지 않더라도 (Key/vlaue)형태의 데이터가 추가된다.
+	for (int i = 0; i < 10; i++)
+	{
+		cout << m[i] << endl;
+	}
+
+	// 넣고 (insert, [])
+	// 뺴고 (erase)
+	// 찾고 (find, [])
+	// 반복자 (map::iterator) (*it) pair<key, value>&
 	
 
 	return 0;
