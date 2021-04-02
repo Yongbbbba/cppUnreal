@@ -3,154 +3,100 @@
 #include <list>
 #include <deque>
 #include <map>
-
+#include <set>
 using namespace std;
 
-// 오늘의 주제 : map
-class Player
-{
-public:
-	Player() : _playerId(0) {}
-	Player(int playerId) : _playerId(playerId) {}
-
-public:
-	int _playerId;
-};
-
+// 오늘의 주제 : set, multimap, multiset
 
 int main()
 {
-	// 연관 컨테이너
-	
-	vector<Player*> v;
+	// map
+	// (Key, Value)
+	//map<int, Player*>;
 
-	// 10만 명 입장
-	for (int i = 0; i < 100000; i++)
+	// 데이터 자체를 key로 사용하고 싶을 때 set 사용
+	// map과 문법 거의 흡사
+	set<int> s;
+
+	// 넣고
+	// 빼고
+	// 찾고
+	// 순회하고
+
+	// 넣고
+	s.insert(10);
+	s.insert(30);
+	s.insert(20);
+	s.insert(40);
+	s.insert(50);
+	s.insert(70);
+	s.insert(90);
+
+	// 빼고
+	s.erase(70);
+
+	// 찾고 
+	set<int>::iterator findIt = s.find(50);
+	if (findIt == s.end())
 	{
-		Player* p = new Player(i);
-		v.push_back(p);
+		cout << "못 찾음" << endl;
 	}
-
-	// 5만 명이 퇴장
-	// 랜덤으로 나간다고 생각
-	for (int i = 0; i < 50000; i++)
-	{
-		int randIndex = rand() % v.size();
-
-		Player* p = v[randIndex];
-		delete p;
-
-		v.erase(v.begin() + randIndex);
-	}
-
-	// (ID = 2만 플레이어)가 (ID = 1만 player)를 공격하고 싶어요
-	// Q) ID = 1만인 player를 찾아주세요
-	// A) 찾아본다. vector는 처음부터 끝까지 원하는 값이 나올 때까지 찾아봐야함! 
-
-	// vector, list의 치명적인 단점
-	// -> 원하는 조건에 해당하는 데이터를 빠르게 찾을 수 [없다]
-
-	// map :  균형 이진 트리 (AVL)
-	// - 노드 기반
-	
-	class Node
-	{
-	public:
-		Node* _left;
-		Node* _right;
-		// DATA
-		pair<int, Player*> _data;
-		/*int _key;
-		Player* _value;*/
-	};
-	srand(static_cast<unsigned int>(time(nullptr)));
-	// (Key, value)
-	map<int, int> m;
-
-	pair<map<int, int>::iterator, bool> ok;
-	
-	ok = m.insert(make_pair(1, 100));
-	ok = m.insert(make_pair(1, 200));
-
-
-	// 이미 존재하는 키라면 insert 되지 않음. 해당 키에 다른 값을 넣고 싶으면 insert말고 다른 걸 써야함
-
-	m.insert(make_pair(1, 100));
-	m.insert(make_pair(1, 200));
-
-	// 10만명
-	for (int i = 0; i < 100000; i++)
-	{
-		m.insert(pair<int, int>(i, i * 100));
-	}
-
-	// 5만명 퇴장
-	for (int i = 0; i < 50000; i++)
-	{
-		int randomValue = rand() % 50000;
-
-		// Erase By Key
-		m.erase(randomValue);
-	}
-
-	// Q) ID = 1만인 Player 찾고 싶다!
-	// A) 매우 빠르게 찾을 수 있음
-	unsigned int count = 0;
-	count = m.erase(10000);
-	count = m.erase(10000);
-	
-	map<int,int>::iterator findIt = m.find(10000);
-
-
-	if (findIt != m.end())
+	else
 	{
 		cout << "찾음" << endl;
 	}
 
-	// 끝까지 10000을 못찾았다는 이야기
-	else
+	//  순회하고
+	for (set<int>::iterator it = s.begin(); it != s.end(); ++it)
 	{
-		cout << "못찾음" << endl;
+		cout << (*it) << endl;
 	}
 
-	// map 순회
-	// v[0] ~ v[i] 
-	for (map<int, int>::iterator it = m.begin(); it != m.end(); ++it)
+	cout << "------------------------------------------" << endl;
+
+	// 키 하나에 값이 여러 개 가능. 실무에서 거의 쓰지 않음. map은 자주 사용. set은 종종 사용
+	multimap<int, int> mm;
+
+	// 넣고
+	mm.insert(make_pair(1, 100));
+	mm.insert(make_pair(1, 200));
+	mm.insert(make_pair(1, 300));
+	mm.insert(make_pair(2, 400));
+	mm.insert(make_pair(2, 500));
+
+	// 빼고
+	unsigned int count = mm.erase(1);
+
+	// 찾고
+
+	multimap<int,int>::iterator itFind = mm.find(1);
+	if (itFind != mm.end())
 	{
-		pair<const int, int>& p = (*it);
-		int key = p.first;   // it->first;
-		int value = p.second; // it->second;
-		
-		cout << key << " " << value << endl;
+		mm.erase(itFind);
+	}
+	
+	pair < multimap<int, int>::iterator, multimap<int, int>::iterator> itPair; // auto itPair
+	itPair = mm.equal_range(1);
+
+	for (multimap<int, int>::iterator it = itPair.first; it != itPair.second; ++it)
+	{
+		cout << it->first << " " << it->second << endl;
 	}
 
-	// 없으면 추가, 있으면 수정
+	cout << "------------------------------------------" << endl;
 
-	map<int, int>::iterator findIt = m.find(10000);
-	if (findIt != m.end())
-	{
-		findIt->second = 200;
-	}
-	else
-	{
-		m.insert(make_pair(10000, 200));
-	}
+	multiset<int> ms;
 
-	// 없으면 추가, 있으면 수정 v2
-	m[5] = 500;
+	// 넣고
+	ms.insert(100);
+	ms.insert(100);
+	ms.insert(100);
+	ms.insert(200);
+	ms.insert(200);
 
-	m.clear();
-	// [] 연산자 사용할 때 주의할 점
-	// 대입을 하지 않더라도 (Key/vlaue)형태의 데이터가 추가된다.
-	for (int i = 0; i < 10; i++)
-	{
-		cout << m[i] << endl;
-	}
+	// 찾고
+	multiset<int>::iterator findIt = ms.find(100);
 
-	// 넣고 (insert, [])
-	// 뺴고 (erase)
-	// 찾고 (find, [])
-	// 반복자 (map::iterator) (*it) pair<key, value>&
 	
 
 	return 0;
