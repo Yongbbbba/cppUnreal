@@ -8,151 +8,117 @@
 
 using namespace std;
 
-// 오늘의 주제 : 연습 문제
+// 오늘의 주제 : 오른값(rvalue) 참조와 std::move
+// modern c++의 꽃!
+class Pet
+{
+	
+};
+
+class Knight
+{
+public:
+	Knight()
+	{
+		cout << "Knight()" << endl;
+	}
+
+	// 복사 생성자
+	Knight(const Knight& knight)
+	{
+		cout << "const Knight()" << endl;
+	}
+
+	// 이동 생성자
+	Knight(Knight&& knight)
+	{
+
+	}
+
+	~Knight()
+	{
+		cout << "~Knight()" << endl;
+		if (_pet)
+			delete _pet;
+	}
+
+	void operator=(const Knight& knight)
+	{
+		cout << "oeprator=(const Knight&)" << endl;
+		_hp = knight._hp;
+
+		// 얕은 복사
+		// _pet = knight._pet;  // 이렇게 만들면 동일한 pet을 보유하는 모양새. _pet이 포인터 변수니까. 
+
+		if (knight._pet)
+			_pet = new Pet(*knight._pet);
+	}
+
+	// 이동 대입 연산자
+	void operator=(Knight&& knight) noexcept
+	{
+		cout << "oeprator=(Knight&&)" << endl;
+
+		// 얕은 복사
+		_hp = knight._hp;
+		_pet = knight._pet;
+
+		knight._pet = nullptr;
+
+	}
+
+
+
+
+public:
+	int _hp = 100;
+	Pet* _pet = nullptr;
+};
+
+void TestKnight_Copy(Knight knight) 
+{ 
+	knight._hp = 200; // 원본에 영향을 미치지 않음
+}
+
+void TestKnight_LValueRef(Knight& knight) { }
+void TestKnight_constLValueRef(const Knight& knight) { }
+
+void TestKnight_RValueRef(Knight&& knight) { }  // 이동 대상!!. 원본은 더이상 사용하지 않겠다라는 힌트를 강력하게 남길 수 있는 이점.
 
 int main()
 {
-	// 자료구조 (데이터를 저장하는 구조)
-	// 알고리즘 (데이터를 어떻게 사용할 것인가?)
+	// 왼값(lvalue) vs 오른값(rvalue)
+	// - lvalue : 단일식을 넘어서 게속 지속되는 개체
+	// - rvalue : lvalue가 아닌 나머지 (임시 값, 열거형, 람다, i++ 등)
 
-	// find
-	// find_if
-	// count
-	// count_if
-	// all_of
-	// any_of
-	// none_of
-	// for_each
-	// 
-	// remove
-	// remove_if
+	// int a = 3;
+	// 3 = a; 이런 식으로 쓸 수 없음
 
+	//Knight k1;
 
-	srand(static_cast<unsigned int>(time(nullptr)));
-	vector<int> v;
+	//TestKnight_Copy(k1);
+	//TestKnight_Copy(Knight());
 
-	for (int i = 0; i < 100; i++)
-	{
-		int num = rand() % 100;
-		v.push_back(num);
-	}
+	//TestKnight_LValueRef(k1);
+	////TestKnight_LValueRef(Knight());  불가능 ~  
 
-	// Q1) number라는 숫자가 벡터에 있는지 체크하는 기능 (bool, 첫 등장 iterator)
-	{
-		int number = 50;
+	//TestKnight_constLValueRef(Knight());
 
-		bool found = false;
-		vector<int>::iterator it;
+	//TestKnight_RValueRef(Knight());
 
-		// TODO
-		vector<int>::iterator itFind = find(v.begin(), v.end(), number);
-		if (itFind == v.end())
-		{
-			// 못찾았음
-			cout << "못 찾음" << endl;
-		}
-		else
-		{
-			cout << "찾았음" << endl;
-		}
-	}
+	Knight k2;
+	k2._pet = new Pet();
+	k2._hp = 1000;
 
-	// Q2) 11로 나뉘는 숫자가 벡터에 있는지 체크하는 기능 (bool, 첫 등장 iterator)
-	{
-		bool found = false;
-		vector<int>::iterator it;
-
-		// TODO
-		// 함수 객체 활용
-		struct CanDivideBy11
-		{
-			bool operator() (int n)
-			{
-				return (n % 11) == 0;
-			}
-		};
-
-		auto itFind = find_if(v.begin(), v.end(), CanDivideBy11());  // 람다식을 사용하면 더 간단하게 할 수 있음
-		if (itFind == v.end())
-		{
-			// 못찾았음
-			cout << "못 찾음" << endl;
-		}
-		else
-		{
-			cout << "찾았음" << endl;
-		}
-	}
+	// 원본은 날려도 된다 << 는 Hint를 주는 쪽에 가깝다!
+	Knight k3;
+	//k3 = static_cast<Knight&&>(k2);  // 이동대입 연산자 호출
+	k3 = std::move(k2); // 오른값 참조로 캐스팅. 윗 문장과 같은 의미임
+	// std::move의 본래 이름 후보 중 하나가 rvalue_cast 였... 
 	
-	// Q3) 홀수인 숫자의 개수는? (count)
-	{
-		struct IsOdd
-		{
-			bool operator() (int n)
-			{
-				return (n % 2) != 0;
-			}
-		};
-		int n = count_if(v.begin(), v.end(), IsOdd());
-		cout << "총 : " << n << "개" << endl;
-
-		// 모든 데이터가 홀수 입니까>
-		bool b1 = all_of(v.begin(), v.end(), IsOdd());
-		//홀수인 데이터가 하나라도 있습니까?
-		bool b2 = any_of(v.begin(), v.end(), IsOdd());
-		// 모든 데이터가 홀수가 아닙니까?
-		bool b3 = none_of(v.begin(), v.end(), IsOdd());
-	}
-
-	// Q4) 벡터에 들어가 있는 모든 숫자들에 3을 곱해주세요!
-	{
-		struct MultiplyBy3
-		{
-			void operator()(int& n)
-			{
-				n = n * 3;
-			}
-		};
-
-		for_each(v.begin(), v.end(), MultiplyBy3());
-	}
-
-	// 홀수인 데이터를 일괄 삭제
-	{
-		for (vector<int>::iterator it = v.begin(); it != v.end();)
-		{
-			if (*it % 2 != 0)
-				it = v.erase(it);
-			else
-				++it;
-		}
-		v.clear();
-		v.push_back(1);
-		v.push_back(4);
-		v.push_back(3);
-		v.push_back(5);
-		v.push_back(8);
-		v.push_back(2);
-
-		struct IsOdd
-		{
-			bool operator() (int n)
-			{
-				return (n % 2) != 0;
-			}
-		};
-
-
-		// 1 4 3 5 8 2
-		// 4 8 2 5 8 2 
-		//remove(v.begin(), v.end(), 4);
-
-		vector<int>::iterator it = remove_if(v.begin(), v.end(), IsOdd());
-		// remove_if는 삭제가 이뤄지는게 아니고, 홀수가 아닌 값을 앞쪽으로 move시킨다.
-		// 그래서 4 8 2 5 8 2라는 묘한 값으로 벡터가 변해있고, 반환되는 이터레이터 이후부터는 5 8 2 값이 들어가는 것이다
-		// 그래서 아래와 같이 그 이터레이터 이후의 값을 제거해줘야 원하는 벡터의 값들을 얻을 수 있게 된다.
-		v.erase(it, v.end());
-	}
+	std::unique_ptr<Knight> uptr = std::make_unique<Knight>();
+	//std::unique_ptr<Knight> uptr2 = uptr; // 불가
+	std::unique_ptr<Knight> uptr2 = std::move(uptr);
 
 	return 0;
 }
