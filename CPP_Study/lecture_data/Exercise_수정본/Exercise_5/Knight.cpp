@@ -37,6 +37,9 @@ int Knight::GetAttackDamage()
 	// hp 50% 이하 => maxHp / hp가 2 이상
 	int damage = _attack;
 
+	if (_maxHp == 0)
+		return damage;
+
 	double ratio = static_cast<double>(_hp) / _maxHp;
 
 	if (ratio <= 0.5)
