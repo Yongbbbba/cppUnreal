@@ -8,143 +8,140 @@
 
 using namespace std;
 
-// 오늘의 주제 : 람다(lambda)
+// 오늘의 주제 : 스마트 포인터 (smart pointer)
+// 서버 시간에 주로 활용할 것인데, 기본적인 것만 훑고 갈 것
 
-// 함수 객체를 빠르게 만드는 문법
-
-enum class ItemType
-{
-	None,
-	Armor,
-	Weapon,
-	Jewelry,
-	Consumable,
-};
-
-enum class Rarity
-{
-	Common,
-	Rare,
-	Unique,
-};
-
-class Item
+class Knight
 {
 public:
-	Item() {}
-	Item(int itemId, Rarity rarity, ItemType type)
-		: _itemId(itemId), _rarity(rarity), _type(type)
-	{
+	Knight() { cout << "Knight 생성" << endl; }
+	~Knight() { cout << "Knight 소멸" << endl; }
 
+	void Attack()
+	{
+		if (_target)
+		{
+			_target->_hp -= _damage;
+			cout << "HP: " << _target->_hp << endl;
+		}
 	}
 
 public:
-	int _itemId = 0;
-	Rarity _rarity = Rarity::Common;
-	ItemType _type = ItemType::None;
+	int _hp = 100;
+	int _damage = 10;
+	shared_ptr<Knight> _target = nullptr;
+};
+
+class RefCountBlock
+{
+public:
+	int _refCount = 1;
+};
+
+template<typename T>
+class SharedPtr
+{
+public:
+	SharedPtr() {}
+	SharedPtr(T* ptr) : _ptr(ptr)
+	{
+		if (_ptr != nullptr)
+		{
+			_block = new RefCountBlock();
+			cout << "RefCount : " << _block->_refCount << endl;
+		}
+	}
+
+	SharedPtr(const SharedPtr& sptr) : _ptr(sptr._ptr), _block(sptr._block)
+	{
+		if (_ptr != nullptr)
+		{
+			_block->_refCount++;
+			cout << "RefCount : " << _block->_refCount << endl;
+		}
+	}
+
+	void operator=(const SharedPtr& sptr)
+	{
+		_ptr(sptr._ptr);
+		_block(sptr._block);
+		if (_ptr != nullptr)
+		{
+			_block->_refCount++;
+			cout << "RefCount : " << _block->_refCount << endl;
+		}
+	}
+
+	~SharedPtr()
+	{
+		if (_ptr != nullptr)
+		{
+			_block->_refCount--;
+			cout << "RefCount : " << _block->_refCount << endl;
+
+			if (_block->_refCount == 0)
+			{
+				delete _ptr;
+				delete _block;
+				cout << "Delete Data" << endl;
+			}
+		}
+	}
+
+public:
+	T* _ptr = nullptr;
+	RefCountBlock* _block = nullptr;
 };
 
 int main()
 {
-	
-	vector<Item> v; 
-	v.push_back(Item(1, Rarity::Common, ItemType::Weapon));
-	v.push_back(Item(2, Rarity::Common, ItemType::Armor));
-	v.push_back(Item(3, Rarity::Rare, ItemType::Jewelry));
-	v.push_back(Item(4, Rarity::Unique, ItemType::Weapon));
+	//Knight* k1 = new Knight();
+	//Knight* k2 = new Knight();
 
-	// 람다 = 함수 객체를 손쉽게 만드는 문법
-	// 람다 자체로 C++11에 '새로운' 기능이 들어간 것은 아니다
+	//k1->_target = k2;
 
+	//delete k2;
 
+	//// k2가 이미 삭제되었지만 k1의 target이 nullptr로 자동으로 바뀌는 것이 아니기 때문에 엉뚱한 값을 출력하게 된다.
+	//k1->Attack();
+
+	// 스마트 포인터 : 포인터를 알맞는 정책에 따라 관리하는 객체 (포인터를 래핑해서 사용)
+	// shared_ptr, weak_ptr, unique_ptr 
+	// shared_ptr이 스마트 포인터의 대표
+	//SharedPtr<Knight> k1(new Knight());
+	//SharedPtr<Knight> k2 = k1;
 	{
-		//struct FindItemByItemId
-		//{
-		//	FindItemByItemId(int itemId) : _itemId(itemId)
-		//	{
-
-		//	}
-
-		//	bool operator()(Item& item)
-		//	{
-		//		return item._itemId == _itemId;
-		//	}
-
-		//	int _itemId;
-		//};
-
-		struct FindItem
+		shared_ptr<Knight> k1 = make_shared<Knight>();
 		{
-			FindItem(int itemId, Rarity rarity, ItemType type)
-				: _itemId(itemId), _rarity(rarity), _type(type)
-			{
+			shared_ptr<Knight> k2 = make_shared<Knight>();
+			k1->_target = k2;
+		}
 
-			}
-			bool operator()(Item& item)
-			{
-				return item._itemId == _itemId && item._rarity == _rarity && item._type == _type;
-			}
-
-			int _itemId;
-			Rarity _rarity;
-			ItemType _type;
-		};
-
-		//// 클로저 (closure) = 람다에 의해 만들어진 실행시점 객체 
-		//auto isUniqueLambda = [](Item& item)
-		//{
-		//	return item._rarity == Rarity::Unique;
-		//}; // 람다 표현식 (lambda expression)
-
-		int itemId = 4;
-		Rarity rarity = Rarity::Unique;
-		ItemType type = ItemType::Weapon;
-
-		// [ ] 캡쳐(capture) : 함수 객체 내부에 변수를 저장하는 개념과 유사
-		// 사진을 찰칵 [캡처]하듯.. 일종의 스냅샷을 찍는다고 이해
-		// 기본 캡처 모드 : 값(복사) 방식(=) 참조 방식(&)
-		// 변수마다 캡쳐 모드를 지정해서 사용 가능 : 값 방식(name), 참조 방식(&name)
-		// 기본 캡쳐 모드보다 변수마다 지정해주는 방식을 지향해야 실수를 줄여줌.
-
-		auto findByItemIdLambda = [&itemId, rarity, type](Item& item) 
-		{ 
-			return item._itemId == itemId && item._rarity == rarity && item._type == type;
-		};
-
-		itemId = 10;
-
-		auto findIt = std::find_if(v.begin(), v.end(), findByItemIdLambda);
-		auto findIt = std::find_if(v.begin(), v.end(), FindItem(4, Rarity::Unique, ItemType::Weapon));
-
-		if (findIt != v.end())
-			cout << "아이템ID: " << findIt->_itemId << endl;
+		k1->Attack();  // k2는 중괄호 안에서만 유효한데, shared_ptr로 k2가 소멸되지 않는다. 누가 k2를 참조하고 있다는 것을 기억하고 있기 때문.
 	}
 
+	// shared_ptr 외에 다른 것들은 왜 있는건가? 
 	{
-		class Knight
-		{
-		public:
-			auto ResetHpJob()
-			{
-				auto f = [this]() 
-				{
-					this->_hp = 200;
-				};
-
-				return f;
-
-			}
-			 
-		public:
-			int _hp = 100;
-		};
-
-		Knight* k = new Knight();
-		auto job = k->ResetHpJob();
-		delete k;
-		job();
+		shared_ptr<Knight> k1 = make_shared<Knight>();
+		
+		shared_ptr<Knight> k2 = make_shared<Knight>();
+		k1->_target = k2;
+		k2->_target = k1;
+		// 순환이 발생해서 절대 소멸하지 않는 문제가 발생
+		
+		k1->Attack();
+		
+		// 이렇게 순환을 끊어줘야 소멸한다.
+		k1->_target = nullptr;
+		k2->_target = nullptr;
 	}
 
-	
+	unique_ptr<Knight> uptr = make_unique<Knight>();
+	// unique_ptr<Knight> uptr2 = uptr;  // 사용불가
+	unique_ptr<Knight> uptr2 = move(uptr);
+
+
+
+
 	return 0;
 }
