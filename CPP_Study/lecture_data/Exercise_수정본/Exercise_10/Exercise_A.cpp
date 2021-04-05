@@ -7,7 +7,7 @@ using namespace std;
 #include "Arrow.h"
 
 // [Bug Report #10]
-// 궁수라며면 자고로 화살을 쏴야겠죠.
+// 궁수라면 자고로 화살을 쏴야겠죠.
 // Arrow는 자신을 목표 대상물을 target으로 관리하고
 // Arrow를 만들 때 설정한 데미지 만큼 target의 체력을 깎습니다.
 // 테스트를 위해 화살 10개를 생성해서 기사를 피격했는데...
@@ -41,16 +41,19 @@ int main()
 		arrows[i]->AttackTarget();
 
 		// 기사가 죽었으면 소멸시켜준다
-		if (knight != nullptr)
+	/*	if (knight != nullptr)
 		{
 			if (knight->IsDead())
 			{
 				delete knight;
 				knight = nullptr;
 			}
-		}	
+		}	*/
 
 		delete arrows[i];
 		arrows[i] = nullptr;
 	}
+
+	delete knight;
+	knight = nullptr;
 }
