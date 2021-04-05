@@ -15,7 +15,7 @@ Player::Player(int hp) : _hp(hp), _maxHp(hp), _attack(10)
 
 Player::~Player()
 {
-	
+	std::cout << "~Player()" << std::endl;
 }
 
 

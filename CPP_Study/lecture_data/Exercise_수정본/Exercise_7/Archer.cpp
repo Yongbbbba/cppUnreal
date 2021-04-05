@@ -1,5 +1,6 @@
 #include "Archer.h"
 #include "Pet.h"
+#include <iostream>
 
 Archer::Archer()
 {
@@ -15,6 +16,7 @@ Archer::Archer(int hp) : Player(hp)
 
 Archer::~Archer()
 {
+	std::cout << "~Archer()" << std::endl;
 	// Áñ°Å¿ü´Ù ³» Æê :(
 	if (_pet != nullptr)
 		delete _pet;

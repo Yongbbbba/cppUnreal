@@ -8,7 +8,7 @@ public:
 	Player();
 	Player(int hp);
 
-	~Player();
+	virtual ~Player();
 
 	void PrintInfo();
 

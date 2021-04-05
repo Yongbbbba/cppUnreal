@@ -15,7 +15,7 @@ Knight::Knight(int hp) : _hp(hp), _attack(10), _maxHp(100)
 
 Knight::~Knight()
 {
-
+	cout << "소멸되었습니다" << endl;
 }
 
 void Knight::AddHp(int value)

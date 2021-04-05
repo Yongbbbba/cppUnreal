@@ -27,7 +27,7 @@ int main()
 		k1->AddHp(TEST_VALUE);
 	}
 
-	cout << k1->_hp << endl;
+	cout << k1->_hp << endl; 
 
 	if (k1->IsDead())
 	{

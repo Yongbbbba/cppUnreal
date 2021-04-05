@@ -1,14 +1,16 @@
 #pragma once
 #include "Player.h"
 
+class Pet;
+
 class Archer : public Player
 {
 public:
 	Archer();
 	Archer(int hp);
-	~Archer();
+	virtual ~Archer();
 
 public:
-	class Pet* _pet;
+	Pet* _pet;
 };
 

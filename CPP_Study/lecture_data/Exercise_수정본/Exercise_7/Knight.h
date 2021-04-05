@@ -6,7 +6,7 @@ class Knight : public Player
 public:
 	Knight();
 	Knight(int hp);
-	~Knight();
+	virtual ~Knight();
 
 
 };
