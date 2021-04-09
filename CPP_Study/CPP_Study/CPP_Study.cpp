@@ -8,7 +8,7 @@
 
 using namespace std;
 
-// 오늘의 주제 : 디버깅
+// 오늘의 주제 : nullptr
 
 
 int main()

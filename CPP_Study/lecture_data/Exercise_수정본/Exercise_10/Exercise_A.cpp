@@ -28,11 +28,13 @@ int main()
 	knight->_maxHp = 150;
 	knight->_attack = 10;
 	
-	Arrow* arrows[10] = {};
+	//Arrow* arrrows[10] = {};
+	shared_ptr<Arrow> arrows[10] = {};
 	for (int i = 0; i < 10; i++)
 	{
 		// 기사를 타겟으로, 궁수의 공격력을 지닌 상태
-		Arrow* arrow = new Arrow(knight, archer->_attack);
+		//Arrow* arrow = new Arrow(knight, archer->_attack);
+		shared_ptr<Arrow> arrow = make_shared<Arrow>(knight, archer->_attack);
 		arrows[i] = arrow;
 	}
 
@@ -41,19 +43,17 @@ int main()
 		arrows[i]->AttackTarget();
 
 		// 기사가 죽었으면 소멸시켜준다
-	/*	if (knight != nullptr)
+		if (knight != nullptr)
 		{
 			if (knight->IsDead())
 			{
 				delete knight;
 				knight = nullptr;
 			}
-		}	*/
+		}	
 
-		delete arrows[i];
+		//delete arrows[i];
 		arrows[i] = nullptr;
 	}
 
-	delete knight;
-	knight = nullptr;
 }

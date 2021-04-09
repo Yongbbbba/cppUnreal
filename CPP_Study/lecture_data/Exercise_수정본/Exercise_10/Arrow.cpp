@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 
-Arrow::Arrow(Player* target, int damage) 
+Arrow::Arrow(Player* target, int damage)
 	: _target(target), _damage(damage)
 {
 
