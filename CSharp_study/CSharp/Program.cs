@@ -12,6 +12,12 @@ namespace CSharp
             Mage
         }
 
+        struct Player
+        {
+            public int hp;
+            public int attack;
+        }
+
         static Character ChooseClass()
         {
             Character choice = Character.None;
@@ -33,16 +39,42 @@ namespace CSharp
                 choice = Character.Mage;
             }
 
-
+            
             return choice;
+        }
+
+        static void CreatePlayer(Character choice, out Player player)
+        {
+            if (choice == Character.Knight)
+            {
+                player.attack = 25;
+                player.hp = 100;
+            }
+            else if (choice == Character.Archer)
+            {
+                player.attack = 35;
+                player.hp = 70;
+            }
+            else
+            {
+                player.attack = 50;
+                player.hp = 50;
+            }
+          
         }
 
         static void Main(string[] args)
         {
-            Character choice = Character.None;
-            while (choice == Character.None)
+            while (true)
             {
-                choice = ChooseClass();
+                Character choice = ChooseClass();
+                if (choice != Character.None)
+                {
+                    // 캐릭터 생성
+                    Player player;
+                    CreatePlayer(choice, out player);
+                    break;
+                }
                 
                 Console.WriteLine();
             }
