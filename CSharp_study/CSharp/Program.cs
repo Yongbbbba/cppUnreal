@@ -3,85 +3,67 @@
 namespace CSharp
 {
     // ref
-    class Knight
-    {
-        public int hp;
-        public int attack;
-
-        // c++의 복사생성자 같이 기능하는듯.
-        // deep copy 방법
-        public Knight Clone()
-        {
-            Knight knight = new Knight();
-            knight.hp = hp;
-            knight.attack = attack;
-
-            return knight;
-        }
-        public void Move()
-        {
-            Console.WriteLine("Knight move!!");
-        }
-
-        public void Attack()
-        {
-            Console.WriteLine("Knight attack!!");
-        }
-    }
-
-    // 복사
-    struct Mage
-    {
-        public int hp;
-        public int attack;
-
-    }
-
+   
     
 
     class Program
     {
-        static void KillMage(Mage mage)
+        static int GetHighestScore(int[] scores)
         {
-            mage.hp = 0;
+            int result = scores[0];
+
+            foreach (var score in  scores)
+            {
+                if (score > result) result = score;    
+            }
+            return result;
         }
 
-        static void KillKnight(Knight knight)
+        static int GetAverageScore(int[] scores)
         {
-            knight.hp = 0;
+            if (scores.Length == 0) return 0;
+            int result = 0;
+            int len = scores.Length;
+            
+            foreach(var score in scores)
+            {
+                result += score;
+            }
+
+            return result / len;
+           
         }
+
+        static int GetIndexOf(int[] scores, int value)
+        {
+            int len = scores.Length;
+            if (len == 0) return -1;
+
+            int result = -1;
+
+            for (int i = 0; i < len; i++)
+            {
+                if (value == scores[i])
+                {
+                    result = i;
+                    break;
+                }
+            }
+            return result;
+        }
+      
         static void Main(string[] args)
         {
-            Mage mage;
-            Knight knight = new Knight();
+            // 배열
+            int[] scores = new int[5] { 10, 30, 40, 20, 50 };
+            int average = GetAverageScore(scores);
+            int maxV = GetHighestScore(scores);
+            int where = GetIndexOf(scores, 30);
 
-            mage.hp = 50;
-            mage.attack = 20;
-
-            knight.hp = 100;
-            knight.attack = 10;
-
-            KillKnight(knight);
-            KillMage(mage);
-
-            Console.WriteLine(mage.hp);
-            Console.WriteLine(knight.hp);
-
-            // 얕은 복사
-            Knight knight2 = knight;
-            knight2.hp = 1000; // knight1의 값도 같이 바뀜 => 얕은 복사
-
-            // 깊은 복사
-            Knight knight3 = new Knight();
-            knight3.hp = knight.hp;
-            knight3.attack = knight.attack;
-
-            Knight knight4 = knight.Clone();
-            knight4.hp = 5000;
-            knight4.attack = 1;
-            
-            
+            Console.WriteLine($"{average},  {maxV}");
+            Console.WriteLine(where);
         }
 
     }
 }
+
