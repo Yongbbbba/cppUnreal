@@ -6,32 +6,43 @@ namespace ServerCore
 {
     class Program
     {
-        static bool _stop = false;  // 전역변수
+        static int x = 0;
+        static int y = 0;
+        static int r1 = 0;
+        static int r2 = 0;
 
-        static void ThreadMain()
+        static void Thread_1()
         {
-            Console.WriteLine("쓰레드 시작");
-            while (_stop == false)
-            {
-                // 누군가가 stop 신호를 해주기를 기다린다.
-            }
-            Console.WriteLine("쓰레드 종료");
+            y = 1; // Store y
+            r1 = x; // Load x 
+        }
+
+        static void Thread_2()
+        {
+            x = 1; // Store x
+            r1 = y; // Load y
         }
 
         static void Main(string[] args)
         {
-            Task t = new Task(ThreadMain);
-            t.Start();
-            Thread.Sleep(1000); // 1초동안 대기
+            int count = 0;
+            while (true)
+            {
+                count++;
+                x = y = r1 = r2 = 0;
 
-            _stop = true;
+                Task t1 = new Task(Thread_1);
+                Task t2 = new Task(Thread_2);
+                t1.Start();
+                t2.Start();
 
-            Console.WriteLine("Stop 호출");
-            Console.WriteLine("종료대기중");
-            t.Wait();
+                Task.WaitAll(t1, t2);  // t1, t2 끝날 떄까지 메인스레드는 대기
 
-            Console.WriteLine("종료 성공");
-            
+                if (r1 == 0 && r2 == 0)
+                    break;
+            }
+
+            Console.WriteLine($"{count}번만에 빠져나옴!");
         }
     }
 }
