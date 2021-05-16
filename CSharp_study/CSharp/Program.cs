@@ -3,41 +3,52 @@ using System.Collections.Generic;
 
 namespace CSharp
 {
+    enum ItemType
+    {
+        Weapon,
+        Armor,
+        Amulet,
+        Ring
+    }
+
+    enum Rarity
+    {
+        Normal,
+        Uncommon,
+        Rare,
+    }
+
+    class Item
+    {
+        public ItemType ItemType;
+        public Rarity Rarity;
+    }
 
     class Program
     {
+        static List<Item> _items = new List<Item>();
 
-        // 업체 사장 - 사장님의 비서를 통해 연락
-        // 우리의 연락처/용건 남겨서 거꾸로 (콜백) 연락을 달라고 .. 
-
-        delegate int OnClicked();  // 함수가 아니라 형식임
-        // delegate -> 형식은 형식인데, 함수 자체를 인자로 넘겨주는 그런 형식
-        // 반환: int 입력:void
-        // Onclicked이 delegate 형식의 이름이다!
-
-        // UI
-        static void ButtonPressed(OnClicked clickedFuntion /* 함수 자체를 인자로 넘겨주고 */)
+        static Item FindWeapon()
         {
-            // PlayAttack();
-            // 이렇게 하면 UI 코드와 게임 로직 코드가 엉키게되는 경우가 생길 수 있음. 실제 게임에서 이 부분을 나누는게 중요함
+            foreach (Item item in _items)
+            {
+                if (item.ItemType == ItemType.Weapon)
+                    return item;
 
-            // 함수를 호출();
-            clickedFuntion();
+            }
+            return null;
         }
+        
 
-        static int TestDelegate()
-        {
-            Console.WriteLine("Hello Delegate");
-            return 0;
-        }
-     
+        
         static void Main(string[] args)
         {
+            // Lambda : 일회용 함수를 만드는데 사용하는 문법이다. 
 
-            // delegate 대리자
-            // 중요하고, 자주 사용되는 문법임
-
-            ButtonPressed(TestDelegate);
+            _items.Add(new Item() { ItemType = ItemType.Weapon, Rarity = Rarity.Normal });
+            _items.Add(new Item() { ItemType = ItemType.Armor, Rarity = Rarity.Uncommon });
+            _items.Add(new Item() { ItemType = ItemType.Ring, Rarity = Rarity.Rare });
+            
 
         }
 
