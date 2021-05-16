@@ -1,69 +1,35 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace CSharp
 {
-    // ref
-   
-    
 
     class Program
     {
-        static int GetHighestScore(int[] scores)
-        {
-            int result = scores[0];
-
-            foreach (var score in  scores)
-            {
-                if (score > result) result = score;    
-            }
-            return result;
-        }
-
-        static int GetAverageScore(int[] scores)
-        {
-            if (scores.Length == 0) return 0;
-            int result = 0;
-            int len = scores.Length;
-            
-            foreach(var score in scores)
-            {
-                result += score;
-            }
-
-            return result / len;
-           
-        }
-
-        static int GetIndexOf(int[] scores, int value)
-        {
-            int len = scores.Length;
-            if (len == 0) return -1;
-
-            int result = -1;
-
-            for (int i = 0; i < len; i++)
-            {
-                if (value == scores[i])
-                {
-                    result = i;
-                    break;
-                }
-            }
-            return result;
-        }
+    
       
         static void Main(string[] args)
         {
-            // 배열
-            int[] scores = new int[5] { 10, 30, 40, 20, 50 };
-            int average = GetAverageScore(scores);
-            int maxV = GetHighestScore(scores);
-            int where = GetIndexOf(scores, 30);
+            // List <- 동적 배열
+            List<int> list = new List<int>();
+            
+            for (int i=0; i<5; i++)
+            {
+                list.Add(i);
+            }
 
-            Console.WriteLine($"{average},  {maxV}");
-            Console.WriteLine(where);
+            // 삽입 삭제
+            list.Insert(2, 999); // 2번 인덱스에 999를 넣어주세요
+         
+            list.RemoveAt(0); // 해당 인덱스의 값을 지우는 것
+            list.Remove(999);  // 값을 지우는 것. 여러 개 있으면 처음 만나는 애를 삭제 함 (얘는 O(N)의 복잡도를 가짐. 앞에서부터 탐색을 해야하니까)
+
+            list.Clear();  // 전체 삭제
+          
+
         }
 
     }
 }
 
+  
