@@ -7,6 +7,8 @@ namespace ServerCore
     class Program
     {
         static volatile int number = 0;
+        static object _obj = new object();
+        
 
         static void Thread_1()
         {
@@ -14,15 +16,19 @@ namespace ServerCore
 
             for (int i = 0; i < 100000; i++)
             {
-                Interlocked.Increment(ref number);
+                Monitor.Enter(_obj); // 문을 잠그는 행위, _obj를 자물쇠라고 생각하자
+                number++;
+                Monitor.Exit(_obj);  // 잠금을 풀어준다.
             }
         }
-
+         
         static void Thread_2()
         {
             for (int i = 0; i < 100000; i++)
             {
-                Interlocked.Decrement(ref number);
+                Monitor.Enter(_obj);
+                number--;
+                Monitor.Exit(_obj);
             }
         }
         
