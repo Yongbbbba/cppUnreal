@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -51,8 +51,8 @@ namespace ServerCore
             _listener.Init(endPoint, OnAcceptHandler);
                
             while (true)
-            { 
-
+            {
+                // _listener.Init(endPoint, OnAcceptHandler); 이 코드 때문에 어차피 계속 루프를 도는 모양새가 되지만 프로그램 종료를 막기 위하여 무한루프문을 놔둔다.
             }
 
         }
