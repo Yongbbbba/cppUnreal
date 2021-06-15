@@ -9,13 +9,13 @@ namespace ServerCore
     class Listener
     {
         Socket _listenSocket;
-        Action<Socket> _onAcceptHandler;
+        Action<Socket> _onAcceptHandler;  // accept 하게 되면 실행할 함수들을 등록하는 핸들러
 
         public void Init(IPEndPoint endPoint, Action<Socket> onAcceptHandler)
         {
             // 문지기 
             _listenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            _onAcceptHandler += onAcceptHandler;
+            _onAcceptHandler += onAcceptHandler;  // 얘를 실행하겠다고 등록하는거에요.
             // 문지기 교육
             _listenSocket.Bind(endPoint);
 
@@ -23,10 +23,14 @@ namespace ServerCore
             // backlog : 최대 대기수
             _listenSocket.Listen(10);
 
-            // 비동기 작업을 완료하는데 사용되는 이벤트 핸들러 초기화
-            SocketAsyncEventArgs args = new SocketAsyncEventArgs();  // 한 번 만들어두면 재사용, 비동기 소켓 작업에 이용
-            args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);  // 비동기 작업이 완료가 되면 OnAcceptCompleted라는 콜백함수를 실행하도록 이벤트 핸들러에 등록
-            RegisterAccept(args);
+            for (int i=0; i< 10; i++)
+            {
+                // 비동기 작업을 완료하는데 사용되는 이벤트 핸들러 초기화
+                SocketAsyncEventArgs args = new SocketAsyncEventArgs();  // 한 번 만들어두면 재사용, 비동기 소켓 작업에 이용
+                args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);  // 비동기 작업이 완료가 되면 OnAcceptCompleted라는 콜백함수를 실행하도록 이벤트 핸들러에 등록
+                RegisterAccept(args);
+
+            }
         }
 
         void RegisterAccept(SocketAsyncEventArgs args)
@@ -49,7 +53,7 @@ namespace ServerCore
         {
             if (args.SocketError == SocketError.Success)
             {
-                _onAcceptHandler.Invoke(args.AcceptSocket);
+                _onAcceptHandler.Invoke(args.AcceptSocket);  // 지금 연결된 소켓이 있으면, 아까 핸들러에 등록한 함수들을 실행하겠다.
             }
             else
                 Console.WriteLine(args.SocketError.ToString());
