@@ -9,13 +9,13 @@ namespace ServerCore
     class Listener
     {
         Socket _listenSocket;
-        Action<Socket> _onAcceptHandler;  // accept 하게 되면 실행할 함수들을 등록하는 핸들러
+        Func<Session> _sessionFactory;  // Action과 다르게 Func retury type이 있다.
 
-        public void Init(IPEndPoint endPoint, Action<Socket> onAcceptHandler)
+        public void Init(IPEndPoint endPoint, Func<Session> sessionFactory)
         {
             // 문지기 
             _listenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            _onAcceptHandler += onAcceptHandler;  // 얘를 실행하겠다고 등록하는거에요.
+            _sessionFactory += sessionFactory;  // 얘를 실행하겠다고 등록하는거에요.
             // 문지기 교육
             _listenSocket.Bind(endPoint);
 
@@ -53,7 +53,9 @@ namespace ServerCore
         {
             if (args.SocketError == SocketError.Success)
             {
-                _onAcceptHandler.Invoke(args.AcceptSocket);  // 지금 연결된 소켓이 있으면, 아까 핸들러에 등록한 함수들을 실행하겠다.
+                Session session = _sessionFactory.Invoke();
+                session.Start(args.AcceptSocket);
+                session.OnConnected(args.AcceptSocket.RemoteEndPoint);
             }
             else
                 Console.WriteLine(args.SocketError.ToString());

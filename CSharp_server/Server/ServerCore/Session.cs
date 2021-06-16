@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
 namespace ServerCore
 {
+    
     // Receive, Send 구현
-    class Session
+    abstract class Session
     {
         Socket _socket;
         int _disconnected = 0;  // 끊겼는지 확인하기 위한 플래그
@@ -18,13 +20,17 @@ namespace ServerCore
         SocketAsyncEventArgs _sendArgs = new SocketAsyncEventArgs();
         SocketAsyncEventArgs _recvArgs = new SocketAsyncEventArgs();
 
-        public void Start(Socket socket)
+        public abstract void OnConnected(EndPoint endPoint);
+        public abstract void OnRecv(ArraySegment<byte> buffer);
+        public abstract void OnSend(int numOfBytes);
+        public abstract void OnDisconnected(EndPoint endPoint);
+
+         public void Start(Socket socket)
         {
             _socket = socket;
             _recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
             _recvArgs.SetBuffer(new byte[1024], 0, 1024);
             _sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleted);
-
 
             RegisterRecv();
         }
@@ -46,6 +52,7 @@ namespace ServerCore
                 return;
 
             // 쫓아낸다 
+            OnDisconnected(_socket.RemoteEndPoint);
             _socket.Shutdown(SocketShutdown.Both);
             _socket.Close();
 
@@ -83,7 +90,7 @@ namespace ServerCore
                         _sendArgs.BufferList = null;  // 사실 굳이 넣어줄 필요는 없음. 방어코드?
                         _pendinglist.Clear();
 
-                        Console.WriteLine($"Transferred  bytes: {_sendArgs.BytesTransferred}");
+                        OnSend(_sendArgs.BytesTransferred);
 
                         // 내가 보내는 동안에 누가 큐에 넣었을 수도 있으니까 다시 확인해보기
                         if (_sendQueue.Count > 0)
@@ -118,8 +125,8 @@ namespace ServerCore
                 // TODO
                 try
                 {
-                    string recvData = Encoding.UTF8.GetString(args.Buffer, args.Offset, args.BytesTransferred);
-                    Console.WriteLine($"[From Client] {recvData}");
+                    // 이벤트 연결해주기
+                    OnRecv(new ArraySegment<byte>(args.Buffer, args.Offset, args.BytesTransferred));
 
                     RegisterRecv();
 
