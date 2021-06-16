@@ -13,20 +13,20 @@ namespace ServerCore
         int _disconnected = 0;  // 끊겼는지 확인하기 위한 플래그
         object _lock = new object();
         Queue<byte[]> _sendQueue = new Queue<byte[]>();
-        bool _pending = false;
-        SocketAsyncEventArgs _sendArgs = new SocketAsyncEventArgs();
+        List<ArraySegment<byte>> _pendinglist = new List<ArraySegment<byte>>();
 
+        SocketAsyncEventArgs _sendArgs = new SocketAsyncEventArgs();
+        SocketAsyncEventArgs _recvArgs = new SocketAsyncEventArgs();
 
         public void Start(Socket socket)
         {
             _socket = socket;
-            SocketAsyncEventArgs recvArgs = new SocketAsyncEventArgs();
-            recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
-            recvArgs.SetBuffer(new byte[1024], 0, 1024);
+            _recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
+            _recvArgs.SetBuffer(new byte[1024], 0, 1024);
             _sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleted);
 
 
-            RegisterRecv(recvArgs);
+            RegisterRecv();
         }
 
         // 하나가 send를 하고 있으면 다른 놈은 못하게 lock을 해줘야한다.
@@ -35,7 +35,7 @@ namespace ServerCore
             lock (_lock)
             {
                 _sendQueue.Enqueue(sendBuff);
-                if (_pending == false)
+                if (_pendinglist.Count == 0)  // 대기중인 애가 하나도 없다.
                     RegisterSend();
             }
         }
@@ -56,9 +56,14 @@ namespace ServerCore
         // send와 recv는 동작하는 방식이 달라진다. send는 언제 보낼지 시점이 정해지지가 않음 
         void RegisterSend()
         {
-            _pending = true;
-            byte[] buff = _sendQueue.Dequeue();
-            _sendArgs.SetBuffer(buff, 0, buff.Length);
+            while (_sendQueue.Count > 0 )
+            {
+                byte[] buff = _sendQueue.Dequeue();
+                // ArraySegment를 사용하면 새로 배열을 만들지 않으면서 버퍼의 특정 데이터를 참조할 수 있음
+                _pendinglist.Add(new ArraySegment<byte>(buff, 0, buff.Length));
+            }
+
+            _sendArgs.BufferList = _pendinglist;
 
             bool pending = _socket.SendAsync(_sendArgs);
             if (pending == false)
@@ -75,13 +80,15 @@ namespace ServerCore
                 {
                     try
                     {
+                        _sendArgs.BufferList = null;  // 사실 굳이 넣어줄 필요는 없음. 방어코드?
+                        _pendinglist.Clear();
+
+                        Console.WriteLine($"Transferred  bytes: {_sendArgs.BytesTransferred}");
+
+                        // 내가 보내는 동안에 누가 큐에 넣었을 수도 있으니까 다시 확인해보기
                         if (_sendQueue.Count > 0)
                         {
                             RegisterSend();
-                        }
-                        else
-                        {
-                            _pending = false;
                         }
                     }
                     catch (Exception e)
@@ -89,6 +96,7 @@ namespace ServerCore
                         Console.WriteLine($"OnSendCompleted Failed {e}");
                     }
                 }
+                // 에러나면 연결 끊어버리기
                 else
                 {
                     Disconnect();
@@ -96,13 +104,11 @@ namespace ServerCore
             }
         }
 
-
-        void RegisterRecv(SocketAsyncEventArgs args)
+        void RegisterRecv()
         {
-            bool pending = _socket.ReceiveAsync(args);
+            bool pending = _socket.ReceiveAsync(_recvArgs);
             if (pending == false)
-                OnRecvCompleted(null, args);
-
+                OnRecvCompleted(null, _recvArgs);
         }
 
         void OnRecvCompleted(object sender, SocketAsyncEventArgs args)
@@ -115,7 +121,7 @@ namespace ServerCore
                     string recvData = Encoding.UTF8.GetString(args.Buffer, args.Offset, args.BytesTransferred);
                     Console.WriteLine($"[From Client] {recvData}");
 
-                    RegisterRecv(args);
+                    RegisterRecv();
 
                 }
                 catch (Exception e)
@@ -127,9 +133,7 @@ namespace ServerCore
             {
                 Disconnect();
             }
-
         }
-
     }
 }
 
