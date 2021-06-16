@@ -1,54 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CSharp
 {
-    enum ItemType
-    {
-        Weapon,
-        Armor,
-        Amulet,
-        Ring
-    }
-
-    enum Rarity
-    {
-        Normal,
-        Uncommon,
-        Rare,
-    }
-
-    class Item
-    {
-        public ItemType ItemType;
-        public Rarity Rarity;
-    }
-
+ 
     class Program
     {
-        static List<Item> _items = new List<Item>();
+        // async/await
+        // 이름만 봐도 비동기 프로그래밍! 
+        // 게임서버) 비동기 = 멀티스레드 ? ->꼭 그렇지는 않다
+        // 유니티) Coroutine = 일종의 비동기 but 싱글스레드
 
-        static Item FindWeapon()
+        static Task Test()
         {
-            foreach (Item item in _items)
+            Console.WriteLine("Start Test");
+            Task t = Task.Delay(3000);
+            return t;
+        }
+
+        static async Task TestAsync()
+        {
+            Console.WriteLine("Start TestAsync");
+            await Task.Delay(3000);
+            Console.WriteLine("End TestAsync");
+        }
+
+        
+        static async Task Main(string[] args)
+        {
+            await TestAsync();
+
+            Console.WriteLine("while start");
+
+            while (true)
             {
-                if (item.ItemType == ItemType.Weapon)
-                    return item;
 
             }
-            return null;
-        }
-        
 
-        
-        static void Main(string[] args)
-        {
-            // Lambda : 일회용 함수를 만드는데 사용하는 문법이다. 
-
-            _items.Add(new Item() { ItemType = ItemType.Weapon, Rarity = Rarity.Normal });
-            _items.Add(new Item() { ItemType = ItemType.Armor, Rarity = Rarity.Uncommon });
-            _items.Add(new Item() { ItemType = ItemType.Ring, Rarity = Rarity.Rare });
-            
 
         }
 
