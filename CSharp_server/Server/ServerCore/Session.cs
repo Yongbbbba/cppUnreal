@@ -9,7 +9,7 @@ namespace ServerCore
 {
     
     // Receive, Send 구현
-    abstract class Session
+    public abstract class Session
     {
         Socket _socket;
         int _disconnected = 0;  // 끊겼는지 확인하기 위한 플래그
