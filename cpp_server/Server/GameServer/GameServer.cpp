@@ -8,84 +8,77 @@
 #include <future>
 #include "ThreadManager.h"
 
-class TestLock
+#include <vector>
+
+// 소수 구하기
+bool IsPrime(int number)
 {
-	USE_LOCK;
+	if (number <= 1)
+		return false;
+	if (number == 2 || number == 3)
+		return true;
 
-public:
-	int32 TestRead()
+	for (int i = 2; i < number; i++)
 	{
-		READ_LOCK;
-		if (_queue.empty())
-			return -1;
-		return _queue.front();
+		if ((number % i) == 0)
+			return false;
 	}
-	
-	void TestPush()
-	{
-		WRITE_LOCK;
-
-		_queue.push(rand() % 100);
-	}
-
-	void TestPop()
-	{
-		WRITE_LOCK;
-
-		if (_queue.empty() == false)
-			_queue.pop();
-	}
-
-private:
-	queue<int32> _queue;
-};
-
-TestLock testLock;
-
-void ThreadWrite()
-{
-	while (true)
-	{
-		testLock.TestPush();
-		this_thread::sleep_for(1ms);
-		testLock.TestPop();
-	}
+	return  true;
 }
 
-void ThreadRead()
+// [start - end]
+int CountPrime(int start, int end)
 {
-	while (true)
+	int count = 0;
+	for (int number = start; number <= end; number++)
 	{
-		int32 value = testLock.TestRead();
-		cout << value << endl; 
-		this_thread::sleep_for(1ms);
+		if (IsPrime(number))
+			count++;
 	}
-
+	return count;
 }
-
-void ThreadMain()
-{
-	while (true)
-	{
-		cout << "Hello ! I am thread... " << LThreadId << endl;
-		this_thread::sleep_for(1s);
-	}
-}
-
 
 int main()
 {
-	for (int32 i = 0; i < 2; i++)
-	{
-		GThreadManager->Launch(ThreadWrite);
+	const int MAX_NUMBER = 1000'000;
 
+	// 싱글스레드
+	// 걸린 시간: 129734
+	//const auto beginTime = ::GetTickCount64();
+	//int result = CountPrime(2, MAX_NUMBER);
+	//const auto endTime = ::GetTickCount64();
+	//cout << "걸린 시간 : " << endTime - beginTime << endl;
+	//cout << result << endl;
+
+	// 멀티스레드
+	const auto beginTime = ::GetTickCount64();
+	
+	vector<thread> threads;
+
+	int coreCount = thread::hardware_concurrency();
+	int jobCount = (MAX_NUMBER / coreCount) + 1;
+	
+	atomic<int> primeCount = 0;
+	for (int i = 0; i < coreCount; i++)
+	{
+		int start = (i * jobCount) + 1;
+		int end = min((i + 1) * jobCount, MAX_NUMBER);
+		threads.push_back(thread([start, end, &primeCount]()
+		{
+			primeCount += CountPrime(start, end);
+		}
+		));
 	}
 
-	for (int32 i = 0; i < 5; i++)
+	for (thread& t : threads)
 	{
-		GThreadManager->Launch(ThreadRead);
+		t.join();
 	}
 
-	GThreadManager->Join();
+	const auto endTime = ::GetTickCount64();
+	cout << "걸린 시간 : " << endTime - beginTime << endl;
+	cout << primeCount << endl;
+
+
 	
 }
