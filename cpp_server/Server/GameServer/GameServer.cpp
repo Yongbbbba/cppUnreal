@@ -7,78 +7,18 @@
 #include <Windows.h>
 #include <future>
 #include "ThreadManager.h"
-
-#include <vector>
-
-// 소수 구하기
-bool IsPrime(int number)
-{
-	if (number <= 1)
-		return false;
-	if (number == 2 || number == 3)
-		return true;
-
-	for (int i = 2; i < number; i++)
-	{
-		if ((number % i) == 0)
-			return false;
-	}
-	return  true;
-}
-
-// [start - end]
-int CountPrime(int start, int end)
-{
-	int count = 0;
-	for (int number = start; number <= end; number++)
-	{
-		if (IsPrime(number))
-			count++;
-	}
-	return count;
-}
+#include "RefCounting.h"
 
 int main()
 {
-	const int MAX_NUMBER = 1000'000;
+	// 커스텀한 스마트 포인터의 단점
+	// 1) 이미 만들어진 클래스 대상으로 사용 불가
+	// 2) 순환 (Cycle) -> 표준 스마트포인터도 마찬가지임
 
-	// 싱글스레드
-	// 걸린 시간: 129734
-	//const auto beginTime = ::GetTickCount64();
-	//int result = CountPrime(2, MAX_NUMBER);
-	//const auto endTime = ::GetTickCount64();
-	//cout << "걸린 시간 : " << endTime - beginTime << endl;
-	//cout << result << endl;
+	// unique_ptr
+	// shared_ptr
+	// weak_ptr
 
-	// 멀티스레드
-	const auto beginTime = ::GetTickCount64();
 	
-	vector<thread> threads;
-
-	int coreCount = thread::hardware_concurrency();
-	int jobCount = (MAX_NUMBER / coreCount) + 1;
-	
-	atomic<int> primeCount = 0;
-	for (int i = 0; i < coreCount; i++)
-	{
-		int start = (i * jobCount) + 1;
-		int end = min((i + 1) * jobCount, MAX_NUMBER);
-		threads.push_back(thread([start, end, &primeCount]()
-		{
-			primeCount += CountPrime(start, end);
-		}
-		));
-	}
-
-	for (thread& t : threads)
-	{
-		t.join();
-	}
-
-	const auto endTime = ::GetTickCount64();
-	cout << "걸린 시간 : " << endTime - beginTime << endl;
-	cout << primeCount << endl;
-
-
 	
 }
