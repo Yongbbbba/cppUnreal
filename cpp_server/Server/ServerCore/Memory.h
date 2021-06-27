@@ -4,7 +4,7 @@
 template<typename Type, typename... Args>
 Type* xnew(Args&&... args)
 {
-	Type* memory = static_cast<Type*>(BaseAllocator::Alloc(sizeof(Type)));
+	Type* memory = static_cast<Type*>(xalloc(sizeof(Type)));
 
 	// placement new
 	// rvalue 참조의 경우 move, universal 참조의 경우 forward 사용
@@ -15,6 +15,7 @@ Type* xnew(Args&&... args)
 template<typename Type>
 void xdelete(Type* obj)
 {
-	BaseAllocator::Release(obj);
+	obj->~Type();
+	xrelease(obj);
 	
 }
