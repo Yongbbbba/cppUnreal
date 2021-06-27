@@ -9,7 +9,7 @@ class RefCountable
 public:
 	RefCountable() : _refCount(1) {}
 	virtual ~RefCountable() {}
-	int32 GetFefCount() { return _refCount; }
+	int32 GetRefCount() { return _refCount; }
 	int32 AddRef() { return ++_refCount; }
 	int32 ReleasedRef()
 	{
@@ -70,7 +70,7 @@ public:
 	bool		operator=(T* ptr)const { return _ptr == ptr; }
 	bool		operator!=(const TSharedPtr& rhs) const { return _ptr != rhs._ptr; }
 	bool		operator!=(T* ptr)const { return _ptr != ptr; }
-	bool		operator<(const TSharedPtr& prhs) const { return  _ptr < rhs._ptr;}
+	bool		operator<(const TSharedPtr& rhs) const { return  _ptr < rhs._ptr;}
 	T*			operator*() { return _ptr; }
 	const T*	operator*() const { return _ptr; }
 				operator T* () const { return _ptr; }
