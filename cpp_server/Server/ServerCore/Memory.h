@@ -4,7 +4,7 @@
 template<typename Type, typename... Args>
 Type* xnew(Args&&... args)
 {
-	Type* memory = static_cast<Type*>(xalloc(sizeof(Type)));
+	Type* memory = static_cast<Type*>(xxalloc(sizeof(Type)));
 
 	// placement new
 	// rvalue 참조의 경우 move, universal 참조의 경우 forward 사용

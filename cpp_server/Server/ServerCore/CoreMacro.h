@@ -1,7 +1,7 @@
 #pragma once
 
 #define OUT
-
+	
 /*-----------------------
 			Lock
 -------------------------*/
@@ -18,7 +18,7 @@
 -----------------------*/
 
 #ifdef _DEBUG
-#define xalloc(size) StompAllocator::Alloc(size)
+#define xxalloc(size) StompAllocator::Alloc(size)
 #define xrelease(ptr) StompAllocator::Release(ptr)
 #else
 #define xalloc(size) BaseAllocator::Alloc(size)
