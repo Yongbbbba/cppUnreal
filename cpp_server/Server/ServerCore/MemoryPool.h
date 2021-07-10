@@ -1,15 +1,19 @@
 #pragma once
 
-/*----------------------
-		MemoryHeader
------------------------*/
+enum
+{
+	SLIST_ALIGNMENT = 16
+};
 
-// [32] [64] [128] ....
-// 다양한 크기의 자료를 담을 수 있는 메모리 풀을 구성한다.
-struct MemoryHeader  // 디버깅을 도와주기 위해서
+/*-----------------
+	MemoryHeader
+------------------*/
+
+DECLSPEC_ALIGN(SLIST_ALIGNMENT)
+struct MemoryHeader : public SLIST_ENTRY
 {
 	// [MemoryHeader][Data]
-	MemoryHeader(int32 size) : allocSize(size) {}
+	MemoryHeader(int32 size) : allocSize(size) { }
 
 	static void* AttachHeader(MemoryHeader* header, int32 size)
 	{
@@ -24,29 +28,28 @@ struct MemoryHeader  // 디버깅을 도와주기 위해서
 	}
 
 	int32 allocSize;
-	// TODO: 필요한 추가 정보
+	// TODO : 필요한 추가 정보
 };
 
-/*----------------------
-		MemoryPool
------------------------*/
+/*-----------------
+	MemoryPool
+------------------*/
 
+DECLSPEC_ALIGN(SLIST_ALIGNMENT)
 class MemoryPool
 {
 public:
 	MemoryPool(int32 allocSize);
 	~MemoryPool();
-	
-	void Push(MemoryHeader* ptr);
-	MemoryHeader* Pop();
+
+	void			Push(MemoryHeader* ptr);
+	MemoryHeader*	Pop();
 
 private:
-	int32 _allocSize = 0;
-	atomic<int32> _allocCount = 0;
-
-	USE_LOCK;
-	queue<MemoryHeader*> _queue;
-
+	SLIST_HEADER	_header;
+	int32			_allocSize = 0;
+	atomic<int32>	_useCount = 0;
+	atomic<int32>	_reserveCount = 0;
 
 };
 

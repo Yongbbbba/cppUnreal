@@ -23,7 +23,7 @@ template<typename Key, typename Type, typename Pred= less<Key>>
 using Map = map < Key, Type, Pred, StlAllocator<pair<const Key, Type>>>;
 
 template<typename Key, typename Pred = less<Key>>
-using Set = set<Key, pred, StlAllocator<Key>>;
+using Set = set<Key, Pred, StlAllocator<Key>>;
 
 template<typename Type>
 using Deque = deque<Type, StlAllocator<Type>>;
@@ -44,7 +44,7 @@ template<typename Key, typename Type, typename Hasher = hash<Key>, typename KeyE
 using HashMap = unordered_map < Key, Type, Hasher, KeyEq, StlAllocator<pair<const Key, Type>>>;
 
 template<typename Key, typename Hasher = hash<Key>, typename KeyEq = equal_to<Key>>
-using HashSet = unordered_map < Key, Hasher, KeyEq, StlAllocator<pair<const Key>>;
+using HashSet = unordered_set<Key, Hasher, KeyEq, StlAllocator<Key>>;
 
 
 

@@ -34,7 +34,7 @@ private:
 template<typename Type, typename... Args>
 Type* xnew(Args&&... args)
 {
-	Type* memory = static_cast<Type*>(xxalloc(sizeof(Type)));
+	Type* memory = static_cast<Type*>(PoolAllocator::Alloc(sizeof(Type)));
 
 	// placement new
 	// rvalue 참조의 경우 move, universal 참조의 경우 forward 사용
@@ -46,6 +46,12 @@ template<typename Type>
 void xdelete(Type* obj)
 {
 	obj->~Type();
-	xrelease(obj);
+	PoolAllocator::Release(obj);
 	
+}
+
+template<typename Type>
+shared_ptr<Type> MakeShared()
+{
+	return shared_ptr<Type>{xnew<Type>(), xdelete<Type>};
 }
