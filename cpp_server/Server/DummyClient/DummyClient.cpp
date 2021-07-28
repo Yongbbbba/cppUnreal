@@ -6,6 +6,12 @@
 #include <ws2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
 
+void HandleError(const char* cause)
+{
+	int32 errCode = ::WSAGetLastError();
+	cout << cause << " ErrorCode : " << errCode << endl;
+}
+
 int main()
 {
 	// winsock 초기화 (ws2_32 라이브러리 초기화)
@@ -14,70 +20,63 @@ int main()
 	if (::WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) // 초기화 실패
 		return 0;
 
-	// ad : Address Family (AF_INET = IPv4, AF_INET6 = IPv6)
-	// type: TCP(SOCK_STREAM) vs UDP(SOCK_DGRAM)
-	// protocol : 0  (0으로 하면 알아서 골라줌)
-	// return : descriptor
-	SOCKET clientSocket = ::socket(AF_INET, SOCK_STREAM, 0);
+	SOCKET clientSocket = ::socket(AF_INET, SOCK_DGRAM, 0);
 	if (clientSocket == INVALID_SOCKET)
 	{
-		int32 errCode = ::WSAGetLastError();
-		cout << "Socket ErrorCode : " << errCode << endl;
+		HandleError("Socket");
 		return 0;
 	}
 
-	// 연결할 목적지는? (IP 주소 * port) ->  xx아파트 yy호
-	SOCKADDR_IN serverAddr; // IPv4로 만드는 구조체
+	SOCKADDR_IN serverAddr;
 	::memset(&serverAddr, 0, sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;
-	//serverAddr.sin_addr.s_addr = ::inet_addr("127.0.0.1");  // 구식 방법
 	::inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
-	serverAddr.sin_port = ::htons(7777);  // 80 : HTTP, 일부 번호는 고정되어서 사용되는 경우가 있으니 주의
-	// host to network short
-	// 엔디언 문제 해결하기 위해서 사용. 네트워크는 빅엔디언 방식을 사용
-	// Little_Endian vs Big-Endian
-	// ex) 0x12345678 4바이트 정수
-	// low [0x78] [0x56] [0x34] [0x12] high  < little, 대부분 little endian 사용
-	// low [0x12] [0x34] [0x56] [0x78] high < big
+	serverAddr.sin_port = ::htons(7777);
 
-	if (::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
-	{
-		int32 errCode = ::WSAGetLastError();
-		cout << "Connect ErrorCode : " << errCode << endl;
-		return 0;
-	}
-
-	// -------------------------------------
-	// 연결 성공. 이제부터 데이터 송수신 가능
-	cout << "Connected To Server!" << endl;
+	// UDP는 데이터를 그냥 보내면 될 뿐 연결의 과정이 없음
+	// but connected UDP라는 것을 통해 서버 정보를 기억해둘 수는 있음
+	// connected라고 해서 TCP처럼 연결된다는 뜻이 아님
+	// Connected UDP 
+	::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
+	// ----------------------------------------------------
 	while (true)
 	{
 		// TODO
 		char sendBuffer[100] = "Hello World";
 
-		for (int i = 0; i < 10; i++)
-		{
-			int32 resultCode = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
-			if (resultCode == SOCKET_ERROR)
-			{
-				int32 errCode = ::WSAGetLastError();
-				cout << "Send ErrorCode : " << errCode << endl;
-				return 0;
-			}
-		}
+		// unconnected UDP
+	/*	int32 resultCode = ::sendto(clientSocket, sendBuffer, sizeof(sendBuffer), 0,
+			(SOCKADDR*)&serverAddr, sizeof(serverAddr));*/
 
+		// connected UDP
+		int resultCode = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
+
+		if (resultCode == SOCKET_ERROR)
+		{
+			HandleError("SendTo");
+			return 0;
+		}
 
 		cout << "Send Data! Len = " << sizeof(sendBuffer) << endl;
 
+		SOCKADDR_IN recvAddr;
+		::memset(&recvAddr, 0, sizeof(recvAddr));
+		int32 addrLen = sizeof(recvAddr);
+
 		char recvBuffer[1000];
 
+
+		// unconnected UDP
+		/*int32 recvLen = ::recvfrom(clientSocket, recvBuffer, sizeof(recvBuffer), 0,
+			(SOCKADDR*)&recvAddr, &addrLen);*/
 		int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+
 		if (recvLen <= 0)
 		{
-			int32 errCode = ::WSAGetLastError();
-			cout << "Recv ErrorCode : " << errCode << endl;
+			HandleError("RecvFrom");
 			return 0;
 		}
+
 		cout << "Recv Data! Data = " << recvBuffer << endl;
 		cout << "Recv Data! Len = " << recvLen << endl;
 
