@@ -67,122 +67,151 @@ int main()
 		return 0;
 
 	cout << "Listen" << endl;
-	 
-	// Select 모델 = (select 함수가 핵심이 되는)
-	// 소켓 함수 호출이 성공할 시점을 미리 알 수 있다!
-	// 문제 상황)
-	// 수신 버퍼에 데이터가 없는데,  read 한다거나! 
-	// 송신버퍼가 꽉 찼는데, write 한다거나!
-	// 다시 말해서 send할 준비가 안됐는데 send를 계속 해서 루프를 돌면서 호출하는 상황은 비효율적
-	// - 블로킹 소켓: 조건이 만족되지 않아서 블로킹되는 상황 예방
-	// - 논블로킹 소켓: 조건이 만족되지 않아서 불필요하게 반복 체크하는 상황을 예방
 
-	// socket set
-	// 1) 읽기[1 2 3] 쓰기[ ] 예외(OOB)[ ] 관찰 대상 목록
-	// OutOfBand는 send() 마지막 인자 MSG_OOB로 보내는 특별한 데이터
-	// 받는 쪽에서도 recv OOB 세팅을 해야 해당 데이터를 읽을 수 있음
-	// 2) select(readSet, writeSet, excpetSet); -> 관찰시작. 준비가 된 소켓의 갯수를 반환
-	// 3) 적어도 하나의 소켓이 준비되면 리턴 -> 낙오자는 알아서 제거됨, 그 다음에 작업을 진행하면 불필요한 반복체크를 안해도됨
-	// 4) 남은 소켓 체크해서 진행
+	// WSAEventSelect= (WSAEventSelect 함수가 핵심이 되는)
+	// 소켓과 관련된 네트워크 이벤트를 [이벤트 객체]를 통해 감지
+	// select와 다르게 비동기 방식으로 동작한다.
 
-	// fd_set read; 
-	// 	FD_ZERO: 비운다
-	// ex) FD_ZERO(set);
-	// FD_SET: set에 소켓 s를 넣는다 
-	// ex) FD_SET(s, &set);
-	// FD_CLR:  소켓 s를 제거
-	// ex FD_CLR(s, &set);
-	// FD_ISSET: 소켓 s가 set에 들어있으면 0이 아닌 값을 리턴
-	
+	// 이벤트 객체 관련 함수들
+	// 생성: WSACreateEvent (수동 리셋 manual-reset + non-signaled 상태 시작)
+	// 삭제: WSACloseEvent
+	// 신호 상태 감지: WSAWaitForMultipleEvents
+	// 구체적인 네트워크 이벤트 알아내기: WSAEnumNetworkEvents
+
+	// 소켓 <-> 이벤트 객체 연동
+	// WSAEventSelect(socket, event, networkEvents);
+	// -관심있는 네트워크 이벤트
+	// FD_ACCEPT : 접속한 클라가 있으면 accept
+	// FD_READ: 데이터 수신 가능 recv, recvfrom
+	// FD_WRITE: 데이터 송신 가능 send, sedto
+	// FD_CLOSE: 상대가 접속 종료
+	// FD_CONNECT: 통신을 위한 연결 절차 완료
+	// FD_OOB
+
+	// 주의 사항
+	// WSAEVentSelect 함수를 호출하면, 해당 소켓은 자동으로 넌블로킹 모드 전환
+	// accept() 함수가 리턴하는 소켓은 listenSocket과 동일한 속성을 갖는다. 
+	// - 따라서 clientSocket은 FD_READ, FD_WRITE 등을 다시 등록 필요
+	// 드물게 WSAEWOULDBLOCK 오류가 뜰 수 있으니 예외 처리 필요
+	// 중요)
+	// - 이벤트 발생 시, 적절한 소켓 함수 호출해야함
+	// - 아니면 다음 번에는 동일 네트워크 이벤트가 발생x
+	// 예를 들어 FD_READ 이벤트가 발생했으면 recv 함수를 호출해줘야한다.
+	// 안하면 FD_READ 두 번 다시 x
+
+	// 1) cout, event
+	// 2) waitAll : 모두 기다림? 하나만 완료되어도 OK?
+	// 3) timeout : 타임아웃
+	// 4) 지금은 false 
+	// 	return : 완료된 첫 번째 인덱스
+	// WSAWaitForMultipleEvents 
+
+	// 1) socket
+	// 	2) eventObject : socket과 연동된 이벤트 객체 핸들을 넘겨주면, 이벤트 객체를 non-signaled
+	// 	3) networkEvent: 네트워크 이벤트 / 오류 정보가 저장
+	// WSAEnumNetworkEvents
+
+	// 세션 개수만큼 wsaEvent를 만들어줄 것
+	vector<WSAEVENT> wsaEvents;
 	vector<Session> sessions;
 	sessions.reserve(100);
 
-	// 관찰대상 소켓 셋 만들기(read, write)
-	fd_set reads;
-	fd_set writes;
-
+	WSAEVENT listenEvent = ::WSACreateEvent();
+	wsaEvents.push_back(listenEvent);
+	sessions.push_back(Session{ listenSocket });
+	if (::WSAEventSelect(listenSocket, listenEvent, FD_ACCEPT | FD_CLOSE) == SOCKET_ERROR)
+		return 0;
 
 	while (true)
 	{
-		// 소켓 셋 초기화
-		FD_ZERO(&reads);
-		FD_ZERO(&writes);
+		int32 index = ::WSAWaitForMultipleEvents(wsaEvents.size(), &wsaEvents[0], FALSE, WSA_INFINITE, FALSE);
+		if (index == WSA_WAIT_FAILED)
+			continue;
 
-		// ListenSocket 등록
-		FD_SET(listenSocket, &reads);
+		index -= WSA_WAIT_EVENT_0;
 
-		// 소켓 등록
-		for (Session& s : sessions)
-		{
-			// 에코서버니까 보내기 전에 일단 받은 데이터가 있어야함. 그래서 이 경우에는 read
-			if (s.recvBytes <= s.sendBytes)
-				FD_SET(s.socket, &reads);
-			else
-				FD_SET(s.socket, &writes);
-		}
+		//::WSAResetEvent(wsaEvents[index]);
 
-		// [옵션] 마지막 timeout 인자 설정가능
-		/*timeval timeout;
-		timeout.tv_sec;
-		timeout.tv_usec*/
-		int32 retVal = ::select(0, &reads, &writes, nullptr, nullptr);
-		if (retVal == SOCKET_ERROR)
-			break;
+		WSANETWORKEVENTS networkEvents;
+		if (::WSAEnumNetworkEvents(sessions[index].socket, wsaEvents[index], &networkEvents) == SOCKET_ERROR)
+			continue;
 
 		// Listener 소켓 체크
-		if (FD_ISSET(listenSocket, &reads))
+		if (networkEvents.lNetworkEvents & FD_ACCEPT)
 		{
-			// accpet할 준비가 되었다.
+			// Error-Check
+			if (networkEvents.iErrorCode[FD_ACCEPT_BIT] != 0)
+				continue;
+
 			SOCKADDR_IN clientAddr;
 			int32 addrLen = sizeof(clientAddr);
+
 			SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &addrLen);
 			if (clientSocket != INVALID_SOCKET)
 			{
 				cout << "Client Connected" << endl;
+
+				WSAEVENT clientEvent = ::WSACreateEvent();
+				wsaEvents.push_back(clientEvent);
 				sessions.push_back(Session{ clientSocket });
+				if (::WSAEventSelect(clientSocket, clientEvent, FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR)
+					return 0;
 			}
 		}
 
-		// 나머지 소켓 체크
-		for (Session& s : sessions)
+		// Client Session 소켓 체크
+		if (networkEvents.lNetworkEvents & FD_READ || networkEvents.lNetworkEvents & FD_WRITE)
 		{
-			if (FD_ISSET(s.socket, &reads))
+			// Error-Check
+			if ((networkEvents.lNetworkEvents & FD_READ) && (networkEvents.iErrorCode[FD_READ_BIT] != 0))
+				continue;
+			// Error-Check
+			if ((networkEvents.lNetworkEvents & FD_WRITE) && (networkEvents.iErrorCode[FD_WRITE_BIT] != 0))
+				continue;
+
+			Session& s = sessions[index];
+
+			// Read
+			if (s.recvBytes == 0)
 			{
 				int32 recvLen = ::recv(s.socket, s.recvBuffer, BUFSIZE, 0);
-				if (recvLen <= 0)
+				if (recvLen == SOCKET_ERROR && ::WSAGetLastError() != WSAEWOULDBLOCK)
 				{
-					// TODO: sessions 제거
+					// TODO : Remove Session
 					continue;
 				}
 
 				s.recvBytes = recvLen;
+				cout << "Recv Data = " << recvLen << endl;
 			}
 
-			// write 체크
-			if (FD_ISSET(s.socket, &writes)) // 송신버퍼에 여유 공간이 있어서 송신할 수 있는 상태이다.
+			// Write
+			if (s.recvBytes > s.sendBytes)
 			{
-				// 블로킹 모드 -> 모든 데이터 다 보냄
-				// 논블로킹 모드 -> 일부만 보낼 수 있음 (상대방 수신 버퍼 상황에 따라). 공식문서에서 이렇게 되어있기는 한데 이런 상황이 테스트해보면 거의 발생하지는 않음
 				int32 sendLen = ::send(s.socket, &s.recvBuffer[s.sendBytes], s.recvBytes - s.sendBytes, 0);
-				if (sendLen == SOCKET_ERROR)
+				if (sendLen == SOCKET_ERROR && ::WSAGetLastError() != WSAEWOULDBLOCK)
 				{
-					// TODO: sessions 제거
+					// TODO : Remove Session
 					continue;
 				}
-				s.sendBytes += sendLen; // 일부 데이터만 보내졌을 수 있음을 위해 방어 코드 작성
 
-				// 모든 데이터를 다 보냄
+				s.sendBytes += sendLen;
 				if (s.recvBytes == s.sendBytes)
 				{
 					s.recvBytes = 0;
 					s.sendBytes = 0;
 				}
+
+				cout << "Send Data = " << sendLen << endl;
 			}
 		}
-		
+
+		// FD_CLOSE 처리
+		if (networkEvents.lNetworkEvents & FD_CLOSE)
+		{
+			// TODO : Remove Socket
+		}
 	}
-
-
 
 	// 윈속 종료
 	::WSACleanup();
