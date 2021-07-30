@@ -29,14 +29,55 @@ struct Session
 	SOCKET socket = INVALID_SOCKET;
 	char recvBuffer[BUFSIZE] = {};
 	int32 recvBytes = 0; 
-	WSAOVERLAPPED overlapped = {};
 };
 
-void CALLBACK RecvCallback(DWORD error, DWORD recvLen, LPWSAOVERLAPPED overlapped, DWORD flags)
+enum IO_TYPE
 {
-	cout << "Data Recv Len Callback = " << recvLen << endl;
-	// TODO : 만약 에코 서버를 만든다면 WSASend()
-	
+	READ,
+	WRITE,
+	ACCEPT,
+	CONNECT,
+};
+
+struct OverlappedEx
+{
+	WSAOVERLAPPED overlapped = {};
+	int32 type = 0; // read, write, accept, connect ... 
+};
+
+void WorkerThreadMain(HANDLE iocpHandle)
+{
+	// cp 핸들을 받아서 완료된 일감이 있는지 체크
+	while (true)
+	{
+		DWORD bytesTransferred = 0;  // 송수신된 데이터의 크기를 확인
+		Session* session = nullptr;
+		OverlappedEx* overlappedEx = nullptr;
+
+		// 완료된 일감이 있는지 체크. 계속 체크한다고 해서 성능에 부하가 생기는 것은 아님.
+		// timeout option을 줄 수 있음.
+		// 멀티스레드 환경에서 race condition이 발생할 수 있기 때문에 여기에 lock을 잡아야하는건가 생각할 수 있는데 그럴 필요없다. 내부적으로 처리해줌.
+		BOOL ret = ::GetQueuedCompletionStatus(iocpHandle, &bytesTransferred,  
+		/*Key*/(ULONG_PTR*)&session, (LPOVERLAPPED*)&overlappedEx, INFINITE);
+
+		if (ret == FALSE || bytesTransferred == 0)
+		{
+			// TODO: 연결 끊김
+			continue;
+		}
+
+		ASSERT_CRASH(overlappedEx->type == IO_TYPE::READ);
+		cout << "Recv Data IOCP = " << bytesTransferred << endl;
+
+		WSABUF wsaBuf;
+		wsaBuf.buf = session->recvBuffer;
+		wsaBuf.len = BUFSIZE;
+
+		DWORD recvLen = 0;
+		DWORD flags = 0;
+
+		::WSARecv(session->socket, &wsaBuf, 1, &recvLen, &flags, &overlappedEx->overlapped, NULL);
+	}
 }
 
 int main()
@@ -45,20 +86,8 @@ int main()
 	if (::WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 		return 0;
 
-	// 블로킹(Blocking)
-	//	   accept -> 접속한 클라가 있을 때
-	// 	   connect -> 서버 접속 성공했을 때 
-	// 	   send, sedto -> 요청한 데이터를 송신 버퍼에 복사했을 때
-	// 	   recv, recvfrom  -> 수신 버퍼에 도착한 데이터가 있고, 이를 유저레벨 버퍼에 복사했을 때
-	// 
-	// 논블로킹(Non-Blocking)
-
 	SOCKET listenSocket = ::socket(AF_INET, SOCK_STREAM, 0);
 	if (listenSocket == INVALID_SOCKET)
-		return 0;
-
-	u_long on = 1;
-	if (::ioctlsocket(listenSocket, FIONBIO, &on) == INVALID_SOCKET)  // 논블로킹소켓 옵션 설정
 		return 0;
 
 	SOCKADDR_IN serverAddr;
@@ -75,128 +104,70 @@ int main()
 
 	cout << "Accept" << endl;
 
-	// Overlapped IO (비동기 + 논블로킹)
-	// -Overlapped 함수를 건다 (WSARecv, WSASend)
-	// -Overlapped 함수가 성공헀는지 확인 후,
-	// -> 성공했으면 결과 얻어서 처리
-	// -> 실패했으면 사유를 확인
+	// Overlapped 모델 (completion Routine 콜백 기반)
+	// - 비동기 입출력 함수 완료되면, 쓰레드마다 있는 APC 큐에 일감이 쌓임.
+	// - Alertable Wait 상태로 들어가서 APC 큐를 비우기 (콜백 함수 실행)
+	// 단점) APC큐게 쓰레드마다 고유하게 있게 된다. 멀티스레드 환경에서 적절하게 배분하는 문제가 생김.
+	// 단점) Alertable Wait 자체도 조금 부담.
+	// 단점) 이벤트 방식 소켓: 이벤트 1:1 대응
 
-	// 완료 통지를 크게 두 가지 방식으로 확인할 수 있는데
-	// 이벤트 방식과 콜백 방식이 있다.
+	// IOCP (completion Port) 모델
+	// - APC 대신 Completion Port 사용 (스레드마다 있는건 아니고 1개. 중앙에서 관리하는 APC 큐의 느낌)
+	// - Alertable Wait -> CP 결과 처리를 GetQueuedCompletionStatus 사용
+	// 쓰레드랑 궁합이 굉장히 좋다. 그래서 멀티스레드 환경에서 사용을 많이 한다.
 
-	// WSASend
-	// WSARecv
-	// AcceptEx
-	// ConnectEx
-	
+	// CreateIoCompletionPort -> CP를 만들고, 소켓을 여기에 등록하는 과정을 한 번에 해주는게 이 함수.
+	// GetQueuedCompletionStatus
 
-	/*char sendBuffer[100];
-	WSABUF wsaBuf;
-	wsaBuf.buf = sendBuffer;
-	wsaBuf.len = 100;*/
+	vector<Session*> sessionManager;
 
-	// WSASend
-	// WSARecv
-	// 	   파라미터 
-	// 1) 비동기 입출력 소켓
-	// 2) WSABUF 배열의 시작 주소 + 개수 // Scatter-Gather 기법
-	// 3) 보내고/받은 바이트 수
-	// 4) 상세 옵션인데 0
-	// 5) WSAOVERLAPPED 구조체 주소값
-	// 6) 입출력이 완료되면 OS가 호출할 콜백 함수
+	// CP 생성
+	HANDLE iocpHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
 
+	// WorkerThreads
+	// CP를 관찰하면서 입출력 완료된 함수가 있는지 확인.
+	for (int32 i = 0; i < 5; i++)
+		GThreadManager->Launch([=]() {WorkerThreadMain(iocpHandle); });
 
-	// Overlapped 모델 (Completion Routine 콜백 기반)
-	// - 비동기 입출력 지원하는 소켓 생성 
-	// - 비동기 입출력 함수 호출(완료 루틴의 시작 주소를 넘겨준다)
-	// - 비동기 작업이 바로 완료되지 않으면, WSA_IO_PENDING 오류 코드
-	// - 비동기 입출력 함수 호출한 쓰레드를 -> Alertable Wait 상태로 만든다.
-	// 	   ex) WaitForSingleObjectEx, WaitForMultipleObjectsEx, SleepEx, WSAWaitForMultipleEvents
-	// - 비동기 IO 완료되면, 운영체제는 완료 루틴 호출
-	// - 완료 루틴 호출이 모두 끝나면, 쓰레드는 Alertable Wait 상태에서 빠져나온다.
-	// - WSAWaitForMultipleEvents 함수 호출해서 이벤트 객체의 singal 판별
-	// - WSAGetOverlappedResult 호출해서 비동기 입출력 결과 확인 및 데이터 처리
-
-	// 1) 오류 발생시 0 아닌 값
-	// 2) 전송 바이트 수
-	// 3) 비동기 입출력 함 수 호출시 넘겨준 WSAOVERLAPPED 구조체의 주소값
-	// 4) 0
-	
-	// void CompletionRoutine()
-
-	// Select 모델
-	// 	   장점) 윈도우/리눅스 공통.
-	// 	   단점) 성능 최하(매번 소켓 등록 비용 발생). 64개 제한. 늘려줄라면 스레드를 늘려야함.
-	// WSAAsyncSelect 모델 = 소켓 이벤트를 윈도우 메시지 형태로 처리. (일반 윈도우 메시지랑 소켓에서 오가는 메시지를 같이 처리하니 성능 문제가 있다..)
-	// WSAEventSelect 모델
-	// 	   장점) 비교적 뛰어난 성능. 클라이언트에서 사용하기 좋음. 서버는 당연히 IOCP.. 끝판왕..
-	// 	   단점) 64개 제한
-	// Overlapped(이벤트 기반)
-	// 	   장점) 성능
-	// 	   단점 ) 64개 제한
-	// Overlapped(콜백 기반)
-	//	   장점) 성능. 성능이 좋으면 왜 IOCP까지 넘어가야하는가?
-	// 	   단점) 모든 비동기 소켓 함수에서 사용 가능하진 않음 (accept). 콜백 함수를 인자로 넣어줄 수 없는 함수가 존재
-	// 	   단점) 빈번한 Alertable Wait으로 인한 성능 저하
-	// IOCP
-	// Reactor Pattern (~뒤늦게) 논블로킹 소켓. 소켓 상태 확인 후 -> 뒤늣게 recv send 호출
-	// Proactor Pattern (~미리) Overlapped WSA~를 이용해서 일단 미리 호출.
-
+	// Main Thread = Accept 담당
 	while (true)
 	{
 		SOCKADDR_IN clientAddr;
 		int32 addrLen = sizeof(clientAddr);
 
-		SOCKET clientSocket;
-	
-		while (true)
-		{
-			clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &addrLen);
-			if (clientSocket != INVALID_SOCKET)
-				break;
-			if (::WSAGetLastError() == WSAEWOULDBLOCK)
-				continue;
-
-			// 문제 있는 상황
+		SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &addrLen);
+		if (clientSocket == INVALID_SOCKET)
 			return 0;
-		}
 
-		Session session = Session{ clientSocket };
-		WSAEVENT wsaEvent = ::WSACreateEvent();
+		Session* session = new Session();
+		session->socket = clientSocket;
+		sessionManager.push_back(session);
 
 		cout << "Client Connected !" << endl;
 
-		while (true)
-		{
-			WSABUF wsaBuf;
-			wsaBuf.buf = session.recvBuffer;
-			wsaBuf.len = BUFSIZE;
-			DWORD recvLen = 0;
-			DWORD flags = 0;
-			if (::WSARecv(clientSocket, &wsaBuf, 1, &recvLen, &flags, &session.overlapped, RecvCallback) == SOCKET_ERROR)
-			{
-				if (::WSAGetLastError() == WSA_IO_PENDING)
-				{
-					// Pending
-					// Alertable Wait
-					::SleepEx(INFINITE, TRUE);  // 비동기 recv를 APC 큐에 넣어놨다가 준비가 되면 콜백 함수를 실행해준다.
-					// ::WSAWaitForMultipleEvents(1, &wsaEvent, TRUE, WSA_INFINITE, TRUE); // 마지막 인자를 true로 해주면 alertable_wait 상태로 넘어가게 된다. 
-				}
-				else
-				{
-					// TODO: 문제있는 상황
-					break;
-				}
-			}
-			else
-			{
-				cout << "Data Recv Len = " << recvLen << endl;
-			}
+		// 소켓을 CP에 등록
+		::CreateIoCompletionPort((HANDLE)clientSocket, iocpHandle, /*Key*/(ULONG_PTR)session, 0);  // 마지막 인자에 0을 넣어주면 최대 코어 개수만큼 할당. 물론 스레드 생성을 자동으로 해주는거는 아님.
 
-		}
-		::closesocket(session.socket);
-		//::WSACloseEvent(wsaEvent);
+		WSABUF wsaBuf;
+		wsaBuf.buf = session->recvBuffer;
+		wsaBuf.len = BUFSIZE;
+
+		OverlappedEx* overlappedEx = new OverlappedEx();
+		overlappedEx->type = IO_TYPE::READ;
+
+		// ADD_REF 필요
+		DWORD recvLen = 0;
+		DWORD flags = 0;
+
+		::WSARecv(clientSocket, &wsaBuf, 1, &recvLen, &flags, &overlappedEx->overlapped, NULL);
+
+		// 만약 클라에서 연결이 끊겼다면? 유저가 게임 종료? 세션 없애줘야하지 않을까?
+		//Session* s = sessionManager.back();
+		//sessionManager.pop_back();
+		//delete s;
 	}
+
+	GThreadManager->Join();
 
 	// 윈속 종료
 	::WSACleanup();
