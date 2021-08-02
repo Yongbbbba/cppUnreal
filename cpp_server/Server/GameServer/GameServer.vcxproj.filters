@@ -16,11 +16,13 @@
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="LockFreeStack.cpp" />
+    <ClCompile Include="ConcurrentStack.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="LockFreeStack.h" />
+    <ClInclude Include="ConcurrentStack.h" />
   </ItemGroup>
 </Project>
