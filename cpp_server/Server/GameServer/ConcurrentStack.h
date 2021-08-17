@@ -52,7 +52,7 @@ public:
             oldHead = _head;
         }
 
-        if (oldHead == nulltptr)
+        if (oldHead == nullptr)
         {
             --_popCount;
             return false;

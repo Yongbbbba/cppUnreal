@@ -17,4 +17,5 @@ using namespace std;
 
 #include "Lock.h"
 #include "ObjectPool.h"
+#include "TypeCast.h"
 #include "memory.h"

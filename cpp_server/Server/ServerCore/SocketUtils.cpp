@@ -35,6 +35,7 @@ bool SocketUtils::BindWindowsFunction(SOCKET socket, GUID guid, LPVOID* fn)
 
 SOCKET SocketUtils::CreateSocket()
 {
+	// WIN API에서 제공하는 소켓 생성 함수로 더 옵션을 세분화해서 넣을 수 있음
 	return ::WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 }
 
@@ -63,6 +64,7 @@ bool SocketUtils::SetSendBufferSize(SOCKET socket, int32 size)
 
 bool SocketUtils::SetTcpNoDelay(SOCKET socket, bool flag)
 {
+	// TCP_NODELAY 네이글 알고리즘 비활성화
 	return SetSockOpt(socket, SOL_SOCKET, TCP_NODELAY, flag);
 }
 
@@ -94,7 +96,7 @@ bool SocketUtils::Listen(SOCKET socket, int32 backlog)
 
 void SocketUtils::Close(SOCKET& socket)
 {
-	if (socket != INVALID_SOCKET)
+	if (socket != INVALID_SOCKET)  // 중복해서 close 하지 않게 하기 위해서 방어코드 삽입
 		::closesocket(socket);
 	socket = INVALID_SOCKET;
 }
