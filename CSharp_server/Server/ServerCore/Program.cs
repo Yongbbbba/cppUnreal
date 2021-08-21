@@ -1,32 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
-// TLS를 사용하면 JobQueue를 사용할 때 Lock을 걸 필요가 없고 그 스레드에 할당된 Task만 처리하면 되니까 효율적이다.
 
 namespace ServerCore
 {
     class Program
     {
-        static ThreadLocal<string> ThreadName = new ThreadLocal<string>(()=> { return $"My name is {Thread.CurrentThread.ManagedThreadId}"; });
-
-        static void WhoAmI()
-        {
-            bool repeat = ThreadName.IsValueCreated;
-            if (repeat)
-                Console.WriteLine(ThreadName.Value + " (repeat)");
-            else
-                Console.WriteLine(ThreadName.Value);
-        }
-
-
         static void Main(string[] args)
         {
-            ThreadPool.SetMinThreads(1, 1);
-            ThreadPool.SetMaxThreads(3,, 3);
-            Parallel.Invoke(WhoAmI, WhoAmI, WhoAmI, WhoAmI, WhoAmI, WhoAmI, WhoAmI);
+            // DNS (Domain Name System)
+            string host = Dns.GetHostName();
+            IPHostEntry ipHost = Dns.GetHostEntry(host);
+            IPAddress ipAddr = ipHost.AddressList[0];
+            IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
+
+            // ListenSocket 
+            Socket listenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+           
+
+            try
+            {
+                // Bind
+                listenSocket.Bind(endPoint);
+
+                // Listen
+                // backlog: 최대 대기수
+                listenSocket.Listen(10);
+
+                while (true)
+                {
+                    Console.WriteLine("Listeniing...");
+
+                    // Accept
+                    Socket clientSocket = listenSocket.Accept();
+
+                    // Recv
+                    byte[] recvBuff = new byte[1024];
+                    int recvBytes = clientSocket.Receive(recvBuff);  // 몇 바이트 받아왔는지 return
+                    string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvBytes);  // 버퍼의 데이터를 문자열로 받기
+                    Console.WriteLine($"[From Client] {recvData}");
+
+                    // Send
+                    byte[] sendBuff = Encoding.UTF8.GetBytes("Welcome to MMORPG Server!");
+                    clientSocket.Send(sendBuff);
+
+                    // Close
+                    clientSocket.Shutdown(SocketShutdown.Both);
+                    clientSocket.Close();
+                }
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+           
         }
     }
 }

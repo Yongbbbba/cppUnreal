@@ -8,39 +8,6 @@ using System.Threading.Tasks;
 
 namespace DummyClient
 {
-    class GameSession : Session
-    {
-        public override void OnConnected(EndPoint endPoint)
-        {
-            Console.WriteLine($"connected: {endPoint}");
-
-            // 보낸다
-            for (int i = 0; i < 5; i++)
-            {
-                byte[] sendBuff = Encoding.UTF8.GetBytes($"Hello World! {i}");
-                Send(sendBuff);
-
-            }
-
-        }
-
-        public override void OnDisconnected(EndPoint endPoint)
-        {
-            Console.WriteLine($"OnDisconnected: {endPoint}");
-        }
-
-        public override void OnRecv(ArraySegment<byte> buffer)
-        {
-            string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
-            Console.WriteLine($"[From Server] {recvData}");
-        }
-
-        public override void OnSend(int numOfBytes)
-        {
-            Console.WriteLine($"Transferred  bytes: {numOfBytes}");
-
-        }
-    }
 
     class Program
     {
@@ -54,25 +21,25 @@ namespace DummyClient
             // 엔드포인트 객체를 만들어서 초기화한다. (IP와 Port Number를 mapping)
             IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
 
-            Connector connector = new Connector();
+            // 휴대폰 설정
+            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            connector.Connect(endPoint, () => { return new GameSession(); });
+            // Connect
+            socket.Connect(endPoint);
+            Console.WriteLine($"Connected to {socket.RemoteEndPoint.ToString()}");
 
-            while (true)
-            {
-                try
-                {
+            // Send
+            byte[] sendBuff = Encoding.UTF8.GetBytes("Hello World!");
+            int sendBytes = socket.Send(sendBuff);
 
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.ToString());
-                }
+            // Recv
+            byte[] recvBuff = new byte[1024];
+            int recvBytes = socket.Receive(recvBuff);
+            string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvBytes);
+            Console.WriteLine($"[From Server] {recvData}");
 
-                Thread.Sleep(100);
-            }
-
-            
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Close();
         }
     }
 }
