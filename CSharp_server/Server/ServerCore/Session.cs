@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace ServerCore
 {
     class Session
     {
         Socket _socket;
+        int _disconnected = 0;
 
         public void Start(Socket socket)
         {
@@ -27,8 +29,12 @@ namespace ServerCore
         public void Disconnect()
         {
             // Close
+            if (Interlocked.Exchange(ref _disconnected, 1) == 1)  // 이미 다른 스레드가 연결 끊었다면 또 끊지 말고 return 
+                return;
+
             _socket.Shutdown(SocketShutdown.Both);
             _socket.Close();
+            
         }
 
         #region 네트워크 통신
@@ -57,7 +63,7 @@ namespace ServerCore
             }
             else
             {
-                // TODO DIsconnect
+                Disconnect();
             }
 
         }
