@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
 namespace ServerCore
-{
-    class Session
+{ 
+
+    abstract class Session
     {
         Socket _socket;
         int _disconnected = 0;
@@ -17,8 +19,13 @@ namespace ServerCore
         SocketAsyncEventArgs _recvArgs = new SocketAsyncEventArgs();
         List<ArraySegment<byte>> _pendinglist = new List<ArraySegment<byte>>();
 
+        public abstract void OnConnected(EndPoint endPoint);
+        public abstract void OnRecv(ArraySegment<byte> buffer);
+        public abstract void OnSend(int numOfBytes);
+        public abstract void OnDisconnected(EndPoint endPoint);
 
-        public void Start(Socket socket)
+
+        public void Start(Socket socket) 
         {
             _socket = socket;
             _recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
@@ -45,6 +52,7 @@ namespace ServerCore
             if (Interlocked.Exchange(ref _disconnected, 1) == 1)  // 이미 다른 스레드가 연결 끊었다면 또 끊지 말고 return 
                 return;
 
+            OnDisconnected(_socket.RemoteEndPoint);
             _socket.Shutdown(SocketShutdown.Both);
             _socket.Close();
             
@@ -78,7 +86,8 @@ namespace ServerCore
                         _sendArgs.BufferList = null;
                         _pendinglist.Clear();
 
-                        Console.WriteLine($"Transfereed bytes: {_sendArgs.BytesTransferred}");
+                        OnSend(_sendArgs.BytesTransferred);
+
                         if (_sendQueue.Count > 0)
                         {
                             RegisterSend();
@@ -109,8 +118,7 @@ namespace ServerCore
             {
                 try
                 {
-                    string recvData = Encoding.UTF8.GetString(args.Buffer, args.Offset, args.BytesTransferred);
-                    Console.WriteLine($"[From Client] {recvData}");
+                    OnRecv(new ArraySegment<byte>(args.Buffer, args.Offset, args.BytesTransferred));
                     RegisterRecv();
                 }
                 catch(Exception e)
