@@ -21,25 +21,32 @@ namespace DummyClient
             // 엔드포인트 객체를 만들어서 초기화한다. (IP와 Port Number를 mapping)
             IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
 
-            // 휴대폰 설정
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            while (true)
+            {
+                // 휴대폰 설정
+                Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            // Connect
-            socket.Connect(endPoint);
-            Console.WriteLine($"Connected to {socket.RemoteEndPoint.ToString()}");
+                // Connect
+                socket.Connect(endPoint);
+                Console.WriteLine($"Connected to {socket.RemoteEndPoint.ToString()}");
 
-            // Send
-            byte[] sendBuff = Encoding.UTF8.GetBytes("Hello World!");
-            int sendBytes = socket.Send(sendBuff);
+                // Send
+                byte[] sendBuff = Encoding.UTF8.GetBytes("Hello World!");
+                int sendBytes = socket.Send(sendBuff);
 
-            // Recv
-            byte[] recvBuff = new byte[1024];
-            int recvBytes = socket.Receive(recvBuff);
-            string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvBytes);
-            Console.WriteLine($"[From Server] {recvData}");
+                // Recv
+                byte[] recvBuff = new byte[1024];
+                int recvBytes = socket.Receive(recvBuff);
+                string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvBytes);
+                Console.WriteLine($"[From Server] {recvData}");
 
-            socket.Shutdown(SocketShutdown.Both);
-            socket.Close();
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Close();
+
+                Thread.Sleep(100);
+            }
+
+            
         }
     }
 }
