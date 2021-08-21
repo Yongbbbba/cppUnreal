@@ -14,7 +14,7 @@ namespace ServerCore
         public void Init(IPEndPoint endPoint, Action<Socket> onAcceptHandler)
         {
             _listenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            _onAcceptHandler += onAcceptHandler;
+            _onAcceptHandler += onAcceptHandler; // accept가 완료되면 이 함수를 실행하도록 등록
 
             // Bind
             _listenSocket.Bind(endPoint);
@@ -39,12 +39,13 @@ namespace ServerCore
             // pending 됐다면 콜백 방식 등을 통해서 완료된 task를 처리해야함
             // 여기서는 이벤트 핸들러에 등록해서 pending된 것이 완료됐을 경우에 처리
         }
-
+        
+        // 이 부분에서 스레드풀에서 worker thread 하나 꺼내와서 여기서 작업을 시작한다.
+        // 멀티스레드로 동작하기 때문에 공유자원에 대해서 lock 등의 방법으로 동기화해줘야함
         void OnAcceptCompleted(object sender, SocketAsyncEventArgs args)
         {
             if (args.SocketError == SocketError.Success)
             {
-                // TODO
                 _onAcceptHandler.Invoke(args.AcceptSocket);
             }
             else
