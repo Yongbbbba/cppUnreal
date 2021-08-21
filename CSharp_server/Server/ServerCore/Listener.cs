@@ -6,15 +6,15 @@ using System.Text;
 
 namespace ServerCore
 {
-    class Listener
+    public class Listener
     {
         Socket _listenSocket;
         Func<Session> _sessionFactory;
 
-        public void Init(IPEndPoint endPoint, Func<Session> sessionFactor)
+        public void Init(IPEndPoint endPoint, Func<Session> sessionFactory)
         {
             _listenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            _sessionFactory += sessionFactor; // accept가 완료되면 이 함수를 실행하도록 등록
+            _sessionFactory += sessionFactory; // accept가 완료되면 이 함수를 실행하도록 등록
 
             // Bind
             _listenSocket.Bind(endPoint);
@@ -46,7 +46,7 @@ namespace ServerCore
         {
             if (args.SocketError == SocketError.Success)
             {
-                Session session = _sessionFactory.Invoke();
+                Session session = _sessionFactory.Invoke();  //  등록된 대리자를 실행. 그러니까 여기서는 GameSession 객체 생성 
                 session.Start(args.AcceptSocket);
                 session.OnConnected(args.AcceptSocket.RemoteEndPoint);
             }
