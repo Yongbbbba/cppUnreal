@@ -1,5 +1,6 @@
 ﻿using ServerCore;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -20,38 +21,69 @@ namespace DummyClient
     class PlayerInfoReq : Packet
     {
         public long playerId;
+        public string name;
+
+        public List<int> skills = new List<int>();
 
         public PlayerInfoReq()
         {
             this.packetId = (ushort)PacketId.PlayerInfoReq;
         }
 
-        public override void Read(ArraySegment<byte> s)
+        public override void Read(ArraySegment<byte> segment)
         {
             ushort count = 0;
+
+            ReadOnlySpan<byte> s = new ReadOnlySpan<byte>(segment.Array, segment.Offset, segment.Count);
+
             //ushort size = BitConverter.ToUInt16(s.Array, s.Offset);
-            count += 2;
+            count += sizeof(ushort);
             // ushort id = BitConverter.ToUInt16(s.Array, s.Offset + count);
-            count += 2;
-            this.playerId = BitConverter.ToInt64(new ReadOnlySpan<byte>(s.Array, s.Offset + count, s.Count - count));
-            count += 8;
+            count += sizeof(ushort);
+            this.playerId = BitConverter.ToInt64(s.Slice(count, s.Length - count));
+            count += sizeof(long);
+
+            // string 
+            ushort nameLen = BitConverter.ToUInt16(s.Slice(count, s.Length - count));
+            count += sizeof(ushort);
+
+            this.name = Encoding.Unicode.GetString(s.Slice(count, nameLen));
+            
         }
 
         public override ArraySegment<byte> Write()
         {
-            ArraySegment<byte> s = SendBufferHelper.Open(4096);
+            ArraySegment<byte> segment = SendBufferHelper.Open(4096);
 
             ushort count = 0;
             bool success = true;
 
-            // success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), packet.size);  // 공간이 모자르면 실패
-            count += 2;
-            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), this.packetId);  // 공간이 모자르면 실패
-            count += 2;
-            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), this.playerId);  // 공간이 모자르면 실패
-            count += 8;
+            Span<byte> s = new Span<byte>(segment.Array, segment.Offset, segment.Count);
 
-            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset, s.Count), count);  // 패킷 사이즈는 마지막에 결정됨
+            // success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), packet.size);  // 공간이 모자르면 실패
+            count += sizeof(ushort);
+            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.packetId);  // 공간이 모자르면 실패
+            count += sizeof(ushort);
+            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.playerId);  // 공간이 모자르면 실패
+            count += sizeof(long);
+
+            // string - 2단계로 나눠서보내기
+            // string len[2]
+            // byte []
+            //ushort nameLen = (ushort)Encoding.Unicode.GetByteCount(this.name);
+            //success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);
+            //count += sizeof(ushort);
+            //Array.Copy(Encoding.Unicode.GetBytes(this.name), 0, segment.Array, count, nameLen);
+            //count += nameLen;
+
+            // string 직렬화하는 또다른 방법
+            ushort nameLen = (ushort)Encoding.Unicode.GetBytes(this.name, 0, this.name.Length, segment.Array, segment.Offset + count + sizeof(ushort));
+            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);
+            count += sizeof(ushort);
+            count += nameLen;
+
+
+            success &= BitConverter.TryWriteBytes(s, count);  // 패킷 사이즈는 마지막에 결정됨
 
             if (success == false)
                 return null;
@@ -82,7 +114,7 @@ namespace DummyClient
         {
             Console.WriteLine($"OnConnected: {endPoint}");
 
-            PlayerInfoReq packet = new PlayerInfoReq() {playerId = 1001};
+            PlayerInfoReq packet = new PlayerInfoReq() {playerId = 1001, name="ABCD"};
 
             // Send
             // for (int i = 0; i < 10; i++)
